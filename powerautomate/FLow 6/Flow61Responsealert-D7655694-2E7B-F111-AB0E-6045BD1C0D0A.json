@@ -1,0 +1,260 @@
+{
+  "properties": {
+    "connectionReferences": {
+      "shared_teams-1": {
+        "runtimeSource": "embedded",
+        "connection": {
+          "connectionReferenceLogicalName": "new_sharedteams_131bd"
+        },
+        "api": {
+          "name": "shared_teams"
+        }
+      }
+    },
+    "definition": {
+      "$schema": "https://schema.management.azure.com/providers/Microsoft.Logic/schemas/2016-06-01/workflowdefinition.json#",
+      "contentVersion": "undefined",
+      "parameters": {
+        "$authentication": {
+          "defaultValue": {},
+          "type": "SecureObject"
+        },
+        "$connections": {
+          "defaultValue": {},
+          "type": "Object"
+        }
+      },
+      "triggers": {
+        "manual": {
+          "type": "Request",
+          "kind": "Button",
+          "inputs": {
+            "schema": {
+              "type": "object",
+              "properties": {
+                "text": {
+                  "description": "Please enter your input",
+                  "title": "TagID",
+                  "type": "string",
+                  "x-ms-content-hint": "TEXT",
+                  "x-ms-dynamically-added": true
+                },
+                "text_1": {
+                  "description": "Please enter your input",
+                  "title": "MsgID",
+                  "type": "string",
+                  "x-ms-content-hint": "TEXT",
+                  "x-ms-dynamically-added": true
+                }
+              },
+              "required": [
+                "text",
+                "text_1"
+              ]
+            }
+          }
+        }
+      },
+      "actions": {
+        "Do_until": {
+          "actions": {
+            "Get_an_@mention_token_for_a_team_tag": {
+              "runAfter": {
+                "Delay_2_sec_interval": [
+                  "Succeeded"
+                ]
+              },
+              "type": "OpenApiConnection",
+              "inputs": {
+                "parameters": {
+                  "groupId": "98861591-14a4-425a-97b4-092ec3044122",
+                  "tagId": "@triggerBody()?['text']"
+                },
+                "host": {
+                  "apiId": "/providers/Microsoft.PowerApps/apis/shared_teams",
+                  "operationId": "AtMentionTag",
+                  "connectionName": "shared_teams-1"
+                },
+                "retryPolicy": {
+                  "type": "none"
+                }
+              }
+            },
+            "Delay_2_sec_interval": {
+              "type": "Wait",
+              "inputs": {
+                "interval": {
+                  "count": 2,
+                  "unit": "Second"
+                }
+              }
+            },
+            "Increment_variable": {
+              "runAfter": {
+                "Reply_with_a_message_in_a_channel": [
+                  "Succeeded"
+                ]
+              },
+              "type": "IncrementVariable",
+              "inputs": {
+                "name": "Iteration count",
+                "value": 1
+              }
+            },
+            "Condition": {
+              "actions": {
+                "Set_variable": {
+                  "type": "SetVariable",
+                  "inputs": {
+                    "name": "Iteration count",
+                    "value": 0
+                  }
+                },
+                "Delay_10_rest": {
+                  "runAfter": {
+                    "Set_variable": [
+                      "Succeeded"
+                    ]
+                  },
+                  "type": "Wait",
+                  "inputs": {
+                    "interval": {
+                      "count": 10,
+                      "unit": "Second"
+                    }
+                  }
+                }
+              },
+              "runAfter": {
+                "Increment_variable": [
+                  "Succeeded"
+                ]
+              },
+              "else": {
+                "actions": {}
+              },
+              "expression": {
+                "and": [
+                  {
+                    "equals": [
+                      "@variables('Iteration count')",
+                      10
+                    ]
+                  }
+                ]
+              },
+              "type": "If"
+            },
+            "Reply_with_a_message_in_a_channel": {
+              "runAfter": {
+                "Get_an_@mention_token_for_a_team_tag": [
+                  "Succeeded"
+                ]
+              },
+              "type": "OpenApiConnection",
+              "inputs": {
+                "parameters": {
+                  "poster": "Flow bot",
+                  "location": "Channel",
+                  "body/parentMessageId": "@triggerBody()?['text_1']",
+                  "body/recipient/groupId": "98861591-14a4-425a-97b4-092ec3044122",
+                  "body/recipient/channelId": "19:76fd78e886e14eb6bade78638dc65ccc@thread.tacv2",
+                  "body/messageBody": "<p class=\"editor-paragraph\">PLEASE ACKNOWLEDGE IN THE ALWAYS READY APP<br><br><br>@{outputs('Get_an_@mention_token_for_a_team_tag')?['body/atMention']}</p><br>"
+                },
+                "host": {
+                  "apiId": "/providers/Microsoft.PowerApps/apis/shared_teams",
+                  "operationId": "ReplyWithMessageToConversation",
+                  "connectionName": "shared_teams-1"
+                }
+              }
+            }
+          },
+          "runAfter": {
+            "Initialize_variable": [
+              "Succeeded"
+            ]
+          },
+          "expression": "@equals(outputs('Get_a_team_tag')?['body/memberCount'],0)",
+          "limit": {
+            "count": 2000,
+            "timeout": "PT2H"
+          },
+          "type": "Until"
+        },
+        "Respond_to_a_Power_App_or_flow": {
+          "runAfter": {
+            "Do_until": [
+              "TimedOut",
+              "Failed"
+            ]
+          },
+          "type": "Response",
+          "kind": "PowerApp",
+          "inputs": {
+            "schema": {
+              "type": "object",
+              "properties": {
+                "recallstatus": {
+                  "title": "Recallstatus",
+                  "type": "string",
+                  "x-ms-content-hint": "TEXT",
+                  "x-ms-dynamically-added": true
+                }
+              },
+              "additionalProperties": {}
+            },
+            "statusCode": 200,
+            "body": {
+              "recallstatus": "RECALL ENDED"
+            }
+          }
+        },
+        "Get_a_team_tag": {
+          "runAfter": {},
+          "type": "OpenApiConnection",
+          "inputs": {
+            "parameters": {
+              "groupId": "98861591-14a4-425a-97b4-092ec3044122",
+              "tagId": "@triggerBody()?['text']"
+            },
+            "host": {
+              "apiId": "/providers/Microsoft.PowerApps/apis/shared_teams",
+              "operationId": "GetTag",
+              "connectionName": "shared_teams-1"
+            }
+          }
+        },
+        "Initialize_variable": {
+          "runAfter": {
+            "Get_a_team_tag": [
+              "Succeeded"
+            ]
+          },
+          "type": "InitializeVariable",
+          "inputs": {
+            "variables": [
+              {
+                "name": "Iteration count",
+                "type": "integer",
+                "value": 0
+              }
+            ]
+          }
+        },
+        "Terminate": {
+          "runAfter": {
+            "Respond_to_a_Power_App_or_flow": [
+              "Succeeded"
+            ]
+          },
+          "type": "Terminate",
+          "inputs": {
+            "runStatus": "Succeeded"
+          }
+        }
+      }
+    },
+    "templateName": null
+  },
+  "schemaVersion": "1.0.0.0"
+}

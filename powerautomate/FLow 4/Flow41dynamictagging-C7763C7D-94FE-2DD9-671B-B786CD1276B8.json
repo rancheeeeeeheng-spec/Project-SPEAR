@@ -1,0 +1,202 @@
+{
+  "properties": {
+    "connectionReferences": {
+      "shared_teams": {
+        "api": {
+          "name": "shared_teams"
+        },
+        "connection": {
+          "connectionReferenceLogicalName": "spear_sharedteams_f364f"
+        },
+        "runtimeSource": "embedded"
+      },
+      "shared_commondataserviceforapps": {
+        "api": {
+          "name": "shared_commondataserviceforapps"
+        },
+        "connection": {
+          "connectionReferenceLogicalName": "spear_sharedcommondataserviceforapps_9d232"
+        },
+        "runtimeSource": "embedded"
+      }
+    },
+    "definition": {
+      "$schema": "https://schema.management.azure.com/providers/Microsoft.Logic/schemas/2016-06-01/workflowdefinition.json#",
+      "contentVersion": "undefined",
+      "parameters": {
+        "$authentication": {
+          "defaultValue": {},
+          "type": "SecureObject"
+        },
+        "$connections": {
+          "defaultValue": {},
+          "type": "Object"
+        }
+      },
+      "triggers": {
+        "manual": {
+          "type": "Request",
+          "kind": "Button",
+          "inputs": {
+            "schema": {
+              "type": "object",
+              "properties": {},
+              "required": []
+            }
+          }
+        }
+      },
+      "actions": {
+        "Create_a_tag_for_a_team": {
+          "type": "OpenApiConnection",
+          "inputs": {
+            "parameters": {
+              "groupId": "98861591-14a4-425a-97b4-092ec3044122",
+              "body/displayName": "UrgentRespond",
+              "body/members": "9a68712c-16ff-4ac0-9ac6-babf9563afd4"
+            },
+            "host": {
+              "apiId": "/providers/Microsoft.PowerApps/apis/shared_teams",
+              "operationId": "CreateTag",
+              "connectionName": "shared_teams"
+            }
+          },
+          "runAfter": {}
+        },
+        "List_rows": {
+          "type": "OpenApiConnection",
+          "inputs": {
+            "parameters": {
+              "entityName": "spear_nominalrolls",
+              "$select": "spear_entraobjectid",
+              "$filter": "_spear_name_value ne null"
+            },
+            "host": {
+              "apiId": "/providers/Microsoft.PowerApps/apis/shared_commondataserviceforapps",
+              "operationId": "ListRecords",
+              "connectionName": "shared_commondataserviceforapps"
+            }
+          },
+          "runAfter": {
+            "Create_a_tag_for_a_team": [
+              "Succeeded"
+            ]
+          }
+        },
+        "For_each": {
+          "type": "Foreach",
+          "foreach": "@outputs('List_rows')?['body/value']",
+          "actions": {
+            "Add_a_member_to_a_team_tag": {
+              "type": "OpenApiConnection",
+              "inputs": {
+                "parameters": {
+                  "groupId": "98861591-14a4-425a-97b4-092ec3044122",
+                  "tagId": "@outputs('Create_a_tag_for_a_team')?['body/id']",
+                  "body/userId": "@items('For_each')?['spear_entraobjectid']"
+                },
+                "host": {
+                  "apiId": "/providers/Microsoft.PowerApps/apis/shared_teams",
+                  "operationId": "AddMemberToTag",
+                  "connectionName": "shared_teams"
+                }
+              }
+            }
+          },
+          "runAfter": {
+            "List_rows": [
+              "Succeeded"
+            ]
+          },
+          "runtimeConfiguration": {
+            "concurrency": {
+              "repetitions": 41
+            }
+          }
+        },
+        "List_rows_1": {
+          "type": "OpenApiConnection",
+          "inputs": {
+            "parameters": {
+              "entityName": "spear_nominalrolls",
+              "$filter": "_spear_name_value ne null"
+            },
+            "host": {
+              "apiId": "/providers/Microsoft.PowerApps/apis/shared_commondataserviceforapps",
+              "operationId": "ListRecords",
+              "connectionName": "shared_commondataserviceforapps"
+            }
+          },
+          "runAfter": {
+            "Create_a_tag_for_a_team": [
+              "Succeeded"
+            ]
+          }
+        },
+        "For_each_1": {
+          "type": "Foreach",
+          "foreach": "@outputs('List_rows_1')?['body/value']",
+          "actions": {
+            "Update_a_row": {
+              "type": "OpenApiConnection",
+              "inputs": {
+                "parameters": {
+                  "entityName": "spear_nominalrolls",
+                  "recordId": "@items('For_each_1')?['spear_nominalrollid']",
+                  "item/spear_teamtagid": "@outputs('Create_a_tag_for_a_team')?['body/id']"
+                },
+                "host": {
+                  "apiId": "/providers/Microsoft.PowerApps/apis/shared_commondataserviceforapps",
+                  "operationId": "UpdateOnlyRecord",
+                  "connectionName": "shared_commondataserviceforapps"
+                }
+              }
+            }
+          },
+          "runAfter": {
+            "List_rows_1": [
+              "Succeeded"
+            ]
+          },
+          "runtimeConfiguration": {
+            "concurrency": {
+              "repetitions": 40
+            }
+          }
+        },
+        "Respond_to_a_Power_App_or_flow": {
+          "type": "Response",
+          "kind": "PowerApp",
+          "inputs": {
+            "schema": {
+              "type": "object",
+              "properties": {
+                "tagid": {
+                  "title": "TagID",
+                  "type": "string",
+                  "x-ms-content-hint": "TEXT",
+                  "x-ms-dynamically-added": true
+                }
+              },
+              "additionalProperties": {}
+            },
+            "statusCode": 200,
+            "body": {
+              "tagid": "@{outputs('Create_a_tag_for_a_team')?['body/id']}"
+            }
+          },
+          "runAfter": {
+            "For_each_1": [
+              "Succeeded"
+            ],
+            "For_each": [
+              "Succeeded"
+            ]
+          }
+        }
+      }
+    },
+    "templateName": null
+  },
+  "schemaVersion": "1.0.0.0"
+}

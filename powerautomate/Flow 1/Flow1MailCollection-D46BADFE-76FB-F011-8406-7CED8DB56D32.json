@@ -1,0 +1,199 @@
+{
+  "properties": {
+    "connectionReferences": {
+      "shared_teams": {
+        "api": {
+          "name": "shared_teams"
+        },
+        "connection": {
+          "connectionReferenceLogicalName": "spear_sharedteams_f364f"
+        },
+        "runtimeSource": "embedded"
+      },
+      "shared_office365users": {
+        "api": {
+          "name": "shared_office365users"
+        },
+        "connection": {
+          "connectionReferenceLogicalName": "new_sharedoffice365users_7d523"
+        },
+        "runtimeSource": "embedded"
+      },
+      "shared_commondataserviceforapps": {
+        "api": {
+          "name": "shared_commondataserviceforapps"
+        },
+        "connection": {
+          "connectionReferenceLogicalName": "spear_sharedcommondataserviceforapps_9d232"
+        },
+        "runtimeSource": "embedded"
+      },
+      "shared_azuread": {
+        "api": {
+          "name": "shared_azuread"
+        },
+        "connection": {
+          "connectionReferenceLogicalName": "new_sharedazuread_8a8fa"
+        },
+        "runtimeSource": "embedded"
+      }
+    },
+    "definition": {
+      "$schema": "https://schema.management.azure.com/providers/Microsoft.Logic/schemas/2016-06-01/workflowdefinition.json#",
+      "contentVersion": "1.0.0.0",
+      "parameters": {
+        "$authentication": {
+          "defaultValue": {},
+          "type": "SecureObject"
+        },
+        "$connections": {
+          "defaultValue": {},
+          "type": "Object"
+        }
+      },
+      "triggers": {
+        "When_a_new_team_member_is_added": {
+          "type": "OpenApiConnection",
+          "inputs": {
+            "parameters": {
+              "groupId": "98861591-14a4-425a-97b4-092ec3044122"
+            },
+            "host": {
+              "apiId": "/providers/Microsoft.PowerApps/apis/shared_teams",
+              "operationId": "OnGroupMembershipAdd",
+              "connectionName": "shared_teams"
+            }
+          },
+          "recurrence": {
+            "interval": 1,
+            "frequency": "Minute"
+          },
+          "runtimeConfiguration": {
+            "concurrency": {
+              "runs": 20,
+              "maximumWaitingRuns": 100
+            }
+          },
+          "splitOn": "@triggerOutputs()?['body']",
+          "metadata": {
+            "operationMetadataId": "9d81589f-5668-4dc3-9443-486030b72dcb"
+          }
+        }
+      },
+      "actions": {
+        "Add_a_member_to_a_team_tag": {
+          "type": "OpenApiConnection",
+          "inputs": {
+            "parameters": {
+              "groupId": "98861591-14a4-425a-97b4-092ec3044122",
+              "tagId": "MTc1NThjZWQtOTA2OC00MzljLWJkZjEtZmU5ZjllMDdmNDVlIyM5ODg2MTU5MS0xNGE0LTQyNWEtOTdiNC0wOTJlYzMwNDQxMjIjI3RLNFVmMXp3dg==",
+              "body/userId": "@triggerOutputs()?['body/id']"
+            },
+            "host": {
+              "apiId": "/providers/Microsoft.PowerApps/apis/shared_teams",
+              "operationId": "AddMemberToTag",
+              "connectionName": "shared_teams"
+            }
+          },
+          "runAfter": {},
+          "metadata": {
+            "operationMetadataId": "1397d5d7-6695-47d5-b850-ba1784781de2"
+          }
+        },
+        "Get_user_profile_(V2)": {
+          "type": "OpenApiConnection",
+          "inputs": {
+            "parameters": {
+              "id": "@triggerOutputs()?['body/id']"
+            },
+            "host": {
+              "apiId": "/providers/Microsoft.PowerApps/apis/shared_office365users",
+              "operationId": "UserProfile_V2",
+              "connectionName": "shared_office365users"
+            }
+          },
+          "runAfter": {
+            "Add_a_member_to_a_team_tag": [
+              "Succeeded"
+            ]
+          },
+          "metadata": {
+            "operationMetadataId": "b68d2c51-3436-4428-b418-a2a7f8235dd8"
+          }
+        },
+        "Compose_Name": {
+          "type": "Compose",
+          "inputs": "@outputs('Get_user_profile_(V2)')?['body/givenName']",
+          "runAfter": {
+            "Get_user": [
+              "Succeeded"
+            ]
+          },
+          "metadata": {
+            "operationMetadataId": "3231ed18-faac-4bdb-b5bf-57f9ce4aeb97"
+          }
+        },
+        "Compose_Email": {
+          "type": "Compose",
+          "inputs": "@outputs('Get_user_profile_(V2)')?['body/mail']",
+          "runAfter": {
+            "Compose_Name": [
+              "Succeeded"
+            ]
+          },
+          "metadata": {
+            "operationMetadataId": "b750066c-7e34-421d-9a11-3609ed52cd9b"
+          }
+        },
+        "Add_a_new_row": {
+          "type": "OpenApiConnection",
+          "inputs": {
+            "parameters": {
+              "entityName": "spear_persondirectories",
+              "item/spear_email": "@outputs('Compose_Email')",
+              "item/spear_entraobjectid": "@outputs('Get_user')?['body/id']",
+              "item/spear_fullname": "@outputs('Compose_Name')"
+            },
+            "host": {
+              "apiId": "/providers/Microsoft.PowerApps/apis/shared_commondataserviceforapps",
+              "operationId": "CreateRecord",
+              "connectionName": "shared_commondataserviceforapps"
+            }
+          },
+          "runAfter": {
+            "Compose_Email": [
+              "Succeeded"
+            ]
+          },
+          "metadata": {
+            "operationMetadataId": "e52d0319-2ead-419e-8629-8633dc1185e5"
+          }
+        },
+        "Get_user": {
+          "type": "OpenApiConnection",
+          "inputs": {
+            "parameters": {
+              "id": "@outputs('Get_user_profile_(V2)')?['body/userPrincipalName']"
+            },
+            "host": {
+              "apiId": "/providers/Microsoft.PowerApps/apis/shared_azuread",
+              "operationId": "GetUser",
+              "connectionName": "shared_azuread"
+            }
+          },
+          "runAfter": {
+            "Get_user_profile_(V2)": [
+              "Succeeded"
+            ]
+          },
+          "metadata": {
+            "operationMetadataId": "e87de667-ecc9-4335-8cff-e7257ba8d65c"
+          }
+        }
+      },
+      "outputs": {}
+    },
+    "templateName": null
+  },
+  "schemaVersion": "1.0.0.0"
+}

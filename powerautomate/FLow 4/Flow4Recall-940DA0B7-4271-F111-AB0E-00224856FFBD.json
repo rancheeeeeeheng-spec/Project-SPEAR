@@ -1,0 +1,672 @@
+{
+  "properties": {
+    "connectionReferences": {
+      "shared_commondataserviceforapps": {
+        "api": {
+          "name": "shared_commondataserviceforapps"
+        },
+        "connection": {
+          "connectionReferenceLogicalName": "spear_sharedcommondataserviceforapps_9d232"
+        },
+        "runtimeSource": "embedded"
+      },
+      "shared_teams": {
+        "api": {
+          "name": "shared_teams"
+        },
+        "connection": {
+          "connectionReferenceLogicalName": "spear_sharedteams_f364f"
+        },
+        "runtimeSource": "invoker"
+      }
+    },
+    "definition": {
+      "$schema": "https://schema.management.azure.com/providers/Microsoft.Logic/schemas/2016-06-01/workflowdefinition.json#",
+      "contentVersion": "1.0.0.0",
+      "parameters": {
+        "$authentication": {
+          "defaultValue": {},
+          "type": "SecureObject"
+        },
+        "$connections": {
+          "defaultValue": {},
+          "type": "Object"
+        }
+      },
+      "triggers": {
+        "manual": {
+          "type": "Request",
+          "kind": "PowerAppV2",
+          "inputs": {
+            "schema": {
+              "type": "object",
+              "properties": {
+                "text": {
+                  "description": "Triggered by ",
+                  "title": "Name",
+                  "type": "string",
+                  "x-ms-content-hint": "TEXT",
+                  "x-ms-dynamically-added": true
+                },
+                "text_1": {
+                  "title": "OPS",
+                  "type": "string",
+                  "x-ms-dynamically-added": true,
+                  "description": "TYPE OF THE OPS",
+                  "x-ms-content-hint": "TEXT"
+                },
+                "text_2": {
+                  "description": "Time of Activation",
+                  "title": "Time",
+                  "type": "string",
+                  "x-ms-content-hint": "TEXT",
+                  "x-ms-dynamically-added": true
+                }
+              },
+              "required": [
+                "text",
+                "text_1",
+                "text_2"
+              ]
+            }
+          },
+          "metadata": {
+            "operationMetadataId": "d2889468-c2ee-4b91-b047-b25bfefa602a"
+          }
+        }
+      },
+      "actions": {
+        "Compose": {
+          "type": "Compose",
+          "inputs": "@formatDateTime(addHours(utcNow(),8),'yyyy-MM-dd')",
+          "runAfter": {
+            "Compose_1": [
+              "Succeeded"
+            ]
+          },
+          "metadata": {
+            "operationMetadataId": "3b4482eb-2c1c-40de-8666-ad3e70ca575c"
+          }
+        },
+        "List_rows": {
+          "type": "OpenApiConnection",
+          "inputs": {
+            "parameters": {
+              "entityName": "spear_nominalrolls"
+            },
+            "host": {
+              "apiId": "/providers/Microsoft.PowerApps/apis/shared_commondataserviceforapps",
+              "operationId": "ListRecords",
+              "connectionName": "shared_commondataserviceforapps"
+            }
+          },
+          "runAfter": {
+            "Compose": [
+              "Succeeded"
+            ]
+          },
+          "metadata": {
+            "operationMetadataId": "ff7abb54-a260-4c83-b51d-431a8a567d10"
+          }
+        },
+        "Apply_to_each": {
+          "type": "Foreach",
+          "foreach": "@outputs('List_rows')?['body/value']",
+          "actions": {
+            "Update_a_recall_status_to_pending": {
+              "type": "OpenApiConnection",
+              "inputs": {
+                "parameters": {
+                  "entityName": "spear_nominalrolls",
+                  "recordId": "@items('Apply_to_each')?['spear_nominalrollid']",
+                  "item/spear_recallcheckintime": "@null",
+                  "item/spear_recalldate": "@outputs('Compose')",
+                  "item/spear_recallstatus": 939290001
+                },
+                "host": {
+                  "apiId": "/providers/Microsoft.PowerApps/apis/shared_commondataserviceforapps",
+                  "operationId": "UpdateOnlyRecord",
+                  "connectionName": "shared_commondataserviceforapps"
+                }
+              },
+              "metadata": {
+                "operationMetadataId": "15964986-54b3-4bf7-9cfb-f53aba2f5c99"
+              }
+            }
+          },
+          "runAfter": {
+            "List_rows": [
+              "Succeeded"
+            ]
+          },
+          "runtimeConfiguration": {
+            "concurrency": {
+              "repetitions": 40
+            }
+          },
+          "metadata": {
+            "operationMetadataId": "7771edc1-3cdf-420a-a775-64b8863f999a"
+          }
+        },
+        "Apply_to_each_2": {
+          "type": "Foreach",
+          "foreach": "@outputs('List_rows')?['body/value']",
+          "actions": {
+            "Update_Response_check_to_pending_1": {
+              "type": "OpenApiConnection",
+              "inputs": {
+                "parameters": {
+                  "entityName": "spear_nominalrolls",
+                  "recordId": "@items('Apply_to_each_2')?['spear_nominalrollid']",
+                  "item/spear_responsecheck": 939290001,
+                  "item/spear_responsechecktime": "@addMinutes(utcNow(),15)"
+                },
+                "host": {
+                  "apiId": "/providers/Microsoft.PowerApps/apis/shared_commondataserviceforapps",
+                  "operationId": "UpdateOnlyRecord",
+                  "connectionName": "shared_commondataserviceforapps"
+                }
+              },
+              "metadata": {
+                "operationMetadataId": "89b53edc-fab6-458b-9a6d-29e935f5f947"
+              }
+            }
+          },
+          "runAfter": {
+            "List_rows": [
+              "Succeeded"
+            ]
+          },
+          "runtimeConfiguration": {
+            "concurrency": {
+              "repetitions": 40
+            }
+          },
+          "metadata": {
+            "operationMetadataId": "7771edc1-3cdf-420a-a775-64b8863f999a"
+          }
+        },
+        "Get_an_@mention_token_for_a_team_tag": {
+          "type": "OpenApiConnection",
+          "inputs": {
+            "parameters": {
+              "groupId": "98861591-14a4-425a-97b4-092ec3044122",
+              "tagId": "@body('Run_a_dynamic_tagging')?['tagid']"
+            },
+            "host": {
+              "apiId": "/providers/Microsoft.PowerApps/apis/shared_teams",
+              "operationId": "AtMentionTag",
+              "connectionName": "shared_teams"
+            }
+          },
+          "runAfter": {
+            "Run_a_dynamic_tagging": [
+              "Succeeded"
+            ]
+          }
+        },
+        "Run_a_dynamic_tagging": {
+          "type": "Workflow",
+          "inputs": {
+            "host": {
+              "workflowReferenceName": "c7763c7d-94fe-2dd9-671b-b786cd1276b8"
+            },
+            "retryPolicy": {
+              "type": "none"
+            }
+          },
+          "runAfter": {},
+          "limit": {
+            "timeout": "PT1H"
+          }
+        },
+        "Post_card_in_a_chat_or_channel": {
+          "type": "OpenApiConnection",
+          "inputs": {
+            "parameters": {
+              "poster": "Flow bot",
+              "location": "Channel",
+              "body/recipient/groupId": "98861591-14a4-425a-97b4-092ec3044122",
+              "body/recipient/channelId": "19:76fd78e886e14eb6bade78638dc65ccc@thread.tacv2",
+              "body/messageBody": "{\n  \"$schema\": \"https://adaptivecards.io/schemas/adaptive-card.json\",\n  \"type\": \"AdaptiveCard\",\n  \"version\": \"1.5\",\n  \"body\": [\n    {\n      \"type\": \"TextBlock\",\n      \"text\": \"🚨 RECALL ACTIVATED\",\n      \"weight\": \"Bolder\",\n      \"size\": \"Large\",\n      \"color\": \"Attention\",\n      \"horizontalAlignment\": \"Center\"\n    },\n    {\n      \"type\": \"TextBlock\",\n      \"text\": \"A recall has been activated for your unit.\",\n      \"wrap\": true,\n      \"horizontalAlignment\": \"Center\",\n      \"spacing\": \"Medium\"\n    },\n    {\n      \"type\": \"TextBlock\",\n      \"text\": \"Please acknowledge the recall and monitor the live dashboard for updates.\",\n      \"wrap\": true,\n      \"spacing\": \"Small\"\n    }\n  ],\n  \"actions\": [\n    {\n      \"type\": \"Action.OpenUrl\",\n      \"title\": \"📱 Open Project S.P.E.A.R.\",\n      \"url\": \"https://apps.powerapps.com/play/e/a00afbd3-bfbc-ef97-aa1a-ca681d6f3680/a/cca8fd34-5e36-4b42-b456-a62492414c35?tenantId=17558ced-9068-439c-bdf1-fe9f9e07f45e&hint=30283539-48a9-486e-8f3a-36bab0552df8&sourcetime=1783903072678\"\n    }\n  ]\n}"
+            },
+            "host": {
+              "apiId": "/providers/Microsoft.PowerApps/apis/shared_teams",
+              "operationId": "PostCardToConversation",
+              "connectionName": "shared_teams"
+            }
+          },
+          "runAfter": {
+            "Post_message_in_a_chat_or_channel": [
+              "Succeeded"
+            ]
+          }
+        },
+        "Post_message_in_a_chat_or_channel": {
+          "type": "OpenApiConnection",
+          "inputs": {
+            "parameters": {
+              "poster": "Flow bot",
+              "location": "Channel",
+              "body/recipient/groupId": "98861591-14a4-425a-97b4-092ec3044122",
+              "body/recipient/channelId": "19:76fd78e886e14eb6bade78638dc65ccc@thread.tacv2",
+              "body/messageBody": "<p class=\"editor-paragraph\"><b><strong class=\"editor-text-bold\" style=\"color: rgb(208, 2, 27);\">RECALL INITIATED</strong></b></p><br><p class=\"editor-paragraph\">Triggered by : @{triggerBody()?['text']}</p><p class=\"editor-paragraph\">Type of ops : @{triggerBody()?['text_1']}</p><br><p class=\"editor-paragraph\"><b><strong class=\"editor-text-bold\">ACKNOWLEDGE </strong></b>in ALWAYS READY APP.</p><br><p class=\"editor-paragraph\">@{outputs('Get_an_@mention_token_for_a_team_tag')?['body/atMention']}</p>"
+            },
+            "host": {
+              "apiId": "/providers/Microsoft.PowerApps/apis/shared_teams",
+              "operationId": "PostMessageToConversation",
+              "connectionName": "shared_teams"
+            }
+          },
+          "runAfter": {
+            "Get_an_@mention_token_for_a_team_tag": [
+              "Succeeded"
+            ]
+          }
+        },
+        "Delay": {
+          "type": "Wait",
+          "inputs": {
+            "interval": {
+              "count": 3,
+              "unit": "Second"
+            }
+          },
+          "runAfter": {
+            "Post_card_in_a_chat_or_channel": [
+              "Succeeded"
+            ]
+          }
+        },
+        "Run_a_alert": {
+          "type": "Workflow",
+          "inputs": {
+            "host": {
+              "workflowReferenceName": "dc2d13cf-cf8a-689d-3615-34e89dc16e9e"
+            },
+            "body": {
+              "text": "@body('Run_a_dynamic_tagging')?['tagid']",
+              "text_1": "@outputs('Post_card_in_a_chat_or_channel')?['body/id']"
+            },
+            "retryPolicy": {
+              "type": "none"
+            }
+          },
+          "runAfter": {
+            "Delay": [
+              "Succeeded"
+            ]
+          },
+          "limit": {
+            "timeout": "PT15M"
+          }
+        },
+        "Terminate": {
+          "type": "Terminate",
+          "inputs": {
+            "runStatus": "Succeeded"
+          },
+          "runAfter": {
+            "Run_a_alert": [
+              "TimedOut"
+            ],
+            "For_each": [
+              "Succeeded"
+            ],
+            "For_each_1": [
+              "Succeeded"
+            ]
+          }
+        },
+        "Add_to_time": {
+          "type": "Expression",
+          "kind": "AddToTime",
+          "inputs": {
+            "baseTime": "@outputs('Compose_1')",
+            "interval": 5,
+            "timeUnit": "Minute"
+          },
+          "runAfter": {
+            "Apply_to_each_2": [
+              "Succeeded"
+            ]
+          }
+        },
+        "Delay_Until": {
+          "type": "Wait",
+          "inputs": {
+            "until": {
+              "timestamp": "@body('Add_to_time')"
+            }
+          },
+          "runAfter": {
+            "Add_to_time": [
+              "Succeeded"
+            ]
+          }
+        },
+        "Add_to_time_1": {
+          "type": "Expression",
+          "kind": "AddToTime",
+          "inputs": {
+            "baseTime": "@outputs('Compose_1')",
+            "interval": 60,
+            "timeUnit": "Minute"
+          },
+          "runAfter": {
+            "Apply_to_each": [
+              "Succeeded"
+            ]
+          }
+        },
+        "Delay_Until_1": {
+          "type": "Wait",
+          "inputs": {
+            "until": {
+              "timestamp": "@body('Add_to_time_1')"
+            }
+          },
+          "runAfter": {
+            "Add_to_time_1": [
+              "Succeeded"
+            ]
+          }
+        },
+        "Compose_1": {
+          "type": "Compose",
+          "inputs": "@convertTimeZone(\r\n    triggerBody()['text_2'],\r\n    'Singapore Standard Time',\r\n    'UTC'\r\n)",
+          "runAfter": {}
+        },
+        "List_rows_1": {
+          "type": "OpenApiConnection",
+          "inputs": {
+            "parameters": {
+              "entityName": "spear_nominalrolls",
+              "$filter": "spear_responsecheck eq 939290001"
+            },
+            "host": {
+              "apiId": "/providers/Microsoft.PowerApps/apis/shared_commondataserviceforapps",
+              "operationId": "ListRecords",
+              "connectionName": "shared_commondataserviceforapps"
+            }
+          },
+          "runAfter": {
+            "Delay_Until": [
+              "Succeeded"
+            ]
+          },
+          "metadata": {
+            "operationMetadataId": "ff7abb54-a260-4c83-b51d-431a8a567d10"
+          }
+        },
+        "For_each": {
+          "type": "Foreach",
+          "foreach": "@outputs('List_rows_1')?['body/value']",
+          "actions": {
+            "Update_a_row_to_no_responses": {
+              "type": "OpenApiConnection",
+              "inputs": {
+                "parameters": {
+                  "entityName": "spear_nominalrolls",
+                  "recordId": "@items('For_each')?['spear_nominalrollid']",
+                  "item/spear_responsecheck": 939290002
+                },
+                "host": {
+                  "apiId": "/providers/Microsoft.PowerApps/apis/shared_commondataserviceforapps",
+                  "operationId": "UpdateOnlyRecord",
+                  "connectionName": "shared_commondataserviceforapps"
+                }
+              }
+            }
+          },
+          "runAfter": {
+            "List_rows_1": [
+              "Succeeded"
+            ]
+          },
+          "runtimeConfiguration": {
+            "concurrency": {
+              "repetitions": 40
+            }
+          }
+        },
+        "List_rows_2": {
+          "type": "OpenApiConnection",
+          "inputs": {
+            "parameters": {
+              "entityName": "spear_nominalrolls",
+              "$filter": "spear_recallstatus eq 939290001"
+            },
+            "host": {
+              "apiId": "/providers/Microsoft.PowerApps/apis/shared_commondataserviceforapps",
+              "operationId": "ListRecords",
+              "connectionName": "shared_commondataserviceforapps"
+            }
+          },
+          "runAfter": {
+            "Delay_Until_1": [
+              "Succeeded"
+            ]
+          }
+        },
+        "For_each_1": {
+          "type": "Foreach",
+          "foreach": "@outputs('List_rows_2')?['body/value']",
+          "actions": {
+            "Update__recall_status_to_late": {
+              "type": "OpenApiConnection",
+              "inputs": {
+                "parameters": {
+                  "entityName": "spear_nominalrolls",
+                  "recordId": "@items('For_each_1')?['spear_nominalrollid']",
+                  "item/spear_recallstatus": 939290002
+                },
+                "host": {
+                  "apiId": "/providers/Microsoft.PowerApps/apis/shared_commondataserviceforapps",
+                  "operationId": "UpdateOnlyRecord",
+                  "connectionName": "shared_commondataserviceforapps"
+                }
+              },
+              "metadata": {
+                "operationMetadataId": "15964986-54b3-4bf7-9cfb-f53aba2f5c99"
+              }
+            }
+          },
+          "runAfter": {
+            "List_rows_2": [
+              "Succeeded"
+            ]
+          },
+          "runtimeConfiguration": {
+            "concurrency": {
+              "repetitions": 40
+            }
+          }
+        },
+        "Run_Alert_6.1_": {
+          "type": "Workflow",
+          "inputs": {
+            "host": {
+              "workflowReferenceName": "d7655694-2e7b-f111-ab0e-6045bd1c0d0a"
+            },
+            "body": {
+              "text": "@body('Run_a_dynamic_tagging')?['tagid']",
+              "text_1": "@outputs('Post_card_in_a_chat_or_channel')?['body/id']"
+            }
+          },
+          "runAfter": {
+            "Delay_1": [
+              "Succeeded"
+            ]
+          }
+        },
+        "Delay_1": {
+          "type": "Wait",
+          "inputs": {
+            "interval": {
+              "count": 10,
+              "unit": "Second"
+            }
+          },
+          "runAfter": {
+            "Delay": [
+              "Succeeded"
+            ]
+          }
+        },
+        "Get_an_@mention_token_for_a_team_tag_1": {
+          "type": "OpenApiConnection",
+          "inputs": {
+            "parameters": {
+              "groupId": "98861591-14a4-425a-97b4-092ec3044122",
+              "tagId": "MTc1NThjZWQtOTA2OC00MzljLWJkZjEtZmU5ZjllMDdmNDVlIyM5ODg2MTU5MS0xNGE0LTQyNWEtOTdiNC0wOTJlYzMwNDQxMjIjI3RLNFVmMXp3dg=="
+            },
+            "host": {
+              "apiId": "/providers/Microsoft.PowerApps/apis/shared_teams",
+              "operationId": "AtMentionTag",
+              "connectionName": "shared_teams"
+            }
+          },
+          "runAfter": {
+            "Run_a_dynamic_tagging": [
+              "FAILED"
+            ]
+          }
+        },
+        "Post_message_in_a_chat_or_channel_1": {
+          "type": "OpenApiConnection",
+          "inputs": {
+            "parameters": {
+              "poster": "Flow bot",
+              "location": "Channel",
+              "body/recipient/groupId": "98861591-14a4-425a-97b4-092ec3044122",
+              "body/recipient/channelId": "19:76fd78e886e14eb6bade78638dc65ccc@thread.tacv2",
+              "body/messageBody": "<p class=\"editor-paragraph\"><b><strong class=\"editor-text-bold\" style=\"color: rgb(208, 2, 27);\">RECALL INITIATED</strong></b></p><br><p class=\"editor-paragraph\">Triggered by : @{triggerBody()?['text']}</p><p class=\"editor-paragraph\">Type of ops : @{triggerBody()?['text_1']}</p><br><p class=\"editor-paragraph\"><b><strong class=\"editor-text-bold\">ACKNOWLEDGE </strong></b>in ALWAYS READY APP.</p><br><p class=\"editor-paragraph\">@{outputs('Get_an_@mention_token_for_a_team_tag_1')?['body/atMention']}</p>"
+            },
+            "host": {
+              "apiId": "/providers/Microsoft.PowerApps/apis/shared_teams",
+              "operationId": "PostMessageToConversation",
+              "connectionName": "shared_teams"
+            }
+          },
+          "runAfter": {
+            "Get_a_team_tag": [
+              "SUCCEEDED"
+            ]
+          }
+        },
+        "Post_card_in_a_chat_or_channel_1": {
+          "type": "OpenApiConnection",
+          "inputs": {
+            "parameters": {
+              "poster": "Flow bot",
+              "location": "Channel",
+              "body/recipient/groupId": "98861591-14a4-425a-97b4-092ec3044122",
+              "body/recipient/channelId": "19:76fd78e886e14eb6bade78638dc65ccc@thread.tacv2",
+              "body/messageBody": "{\n  \"$schema\": \"https://adaptivecards.io/schemas/adaptive-card.json\",\n  \"type\": \"AdaptiveCard\",\n  \"version\": \"1.5\",\n  \"body\": [\n    {\n      \"type\": \"TextBlock\",\n      \"text\": \"🚨 RECALL ACTIVATED\",\n      \"weight\": \"Bolder\",\n      \"size\": \"Large\",\n      \"color\": \"Attention\",\n      \"horizontalAlignment\": \"Center\"\n    },\n    {\n      \"type\": \"TextBlock\",\n      \"text\": \"A recall has been activated for your unit.\",\n      \"wrap\": true,\n      \"horizontalAlignment\": \"Center\",\n      \"spacing\": \"Medium\"\n    },\n    {\n      \"type\": \"TextBlock\",\n      \"text\": \"Please acknowledge the recall and monitor the live dashboard for updates.\",\n      \"wrap\": true,\n      \"spacing\": \"Small\"\n    }\n  ],\n  \"actions\": [\n    {\n      \"type\": \"Action.OpenUrl\",\n      \"title\": \"📱 Open Project S.P.E.A.R.\",\n      \"url\": \"https://apps.powerapps.com/play/e/a00afbd3-bfbc-ef97-aa1a-ca681d6f3680/a/cca8fd34-5e36-4b42-b456-a62492414c35?tenantId=17558ced-9068-439c-bdf1-fe9f9e07f45e&hint=30283539-48a9-486e-8f3a-36bab0552df8&sourcetime=1783903072678\"\n    }\n  ]\n}"
+            },
+            "host": {
+              "apiId": "/providers/Microsoft.PowerApps/apis/shared_teams",
+              "operationId": "PostCardToConversation",
+              "connectionName": "shared_teams"
+            }
+          },
+          "runAfter": {
+            "Post_message_in_a_chat_or_channel_1": [
+              "SUCCEEDED"
+            ]
+          }
+        },
+        "Delay_2": {
+          "type": "Wait",
+          "inputs": {
+            "interval": {
+              "count": 3,
+              "unit": "Second"
+            }
+          },
+          "runAfter": {
+            "Post_card_in_a_chat_or_channel_1": [
+              "SUCCEEDED"
+            ]
+          }
+        },
+        "Run_a_alert_1": {
+          "type": "Workflow",
+          "inputs": {
+            "host": {
+              "workflowReferenceName": "dc2d13cf-cf8a-689d-3615-34e89dc16e9e"
+            },
+            "body": {
+              "text": "@outputs('Get_a_team_tag')?['body/id']",
+              "text_1": "@outputs('Post_card_in_a_chat_or_channel_1')?['body/id']"
+            },
+            "retryPolicy": {
+              "type": "none"
+            }
+          },
+          "runAfter": {
+            "Delay_2": [
+              "SUCCEEDED"
+            ]
+          },
+          "limit": {
+            "timeout": "PT15M"
+          }
+        },
+        "Delay_1_1": {
+          "type": "Wait",
+          "inputs": {
+            "interval": {
+              "count": 10,
+              "unit": "Second"
+            }
+          },
+          "runAfter": {
+            "Delay_2": [
+              "SUCCEEDED"
+            ]
+          }
+        },
+        "Run_Alert_6.1__1": {
+          "type": "Workflow",
+          "inputs": {
+            "host": {
+              "workflowReferenceName": "d7655694-2e7b-f111-ab0e-6045bd1c0d0a"
+            },
+            "body": {
+              "text": "@outputs('Get_a_team_tag')?['body/id']",
+              "text_1": "@outputs('Post_card_in_a_chat_or_channel_1')?['body/id']"
+            }
+          },
+          "runAfter": {
+            "Delay_1_1": [
+              "SUCCEEDED"
+            ]
+          }
+        },
+        "Get_a_team_tag": {
+          "type": "OpenApiConnection",
+          "inputs": {
+            "parameters": {
+              "groupId": "98861591-14a4-425a-97b4-092ec3044122",
+              "tagId": "MTc1NThjZWQtOTA2OC00MzljLWJkZjEtZmU5ZjllMDdmNDVlIyM5ODg2MTU5MS0xNGE0LTQyNWEtOTdiNC0wOTJlYzMwNDQxMjIjI3RLNFVmMXp3dg=="
+            },
+            "host": {
+              "apiId": "/providers/Microsoft.PowerApps/apis/shared_teams",
+              "operationId": "GetTag",
+              "connectionName": "shared_teams"
+            }
+          },
+          "runAfter": {
+            "Get_an_@mention_token_for_a_team_tag_1": [
+              "SUCCEEDED"
+            ]
+          }
+        }
+      }
+    },
+    "templateName": null
+  },
+  "schemaVersion": "1.0.0.0"
+}

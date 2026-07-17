@@ -1,0 +1,120 @@
+{
+  "properties": {
+    "connectionReferences": {
+      "shared_commondataserviceforapps": {
+        "api": {
+          "name": "shared_commondataserviceforapps"
+        },
+        "connection": {
+          "connectionReferenceLogicalName": "spear_sharedcommondataserviceforapps_9d232"
+        },
+        "runtimeSource": "embedded"
+      },
+      "shared_teams": {
+        "api": {
+          "name": "shared_teams"
+        },
+        "connection": {
+          "connectionReferenceLogicalName": "spear_sharedteams_f364f"
+        },
+        "runtimeSource": "embedded"
+      }
+    },
+    "definition": {
+      "$schema": "https://schema.management.azure.com/providers/Microsoft.Logic/schemas/2016-06-01/workflowdefinition.json#",
+      "contentVersion": "1.0.0.0",
+      "parameters": {
+        "$authentication": {
+          "defaultValue": {},
+          "type": "SecureObject"
+        },
+        "$connections": {
+          "defaultValue": {},
+          "type": "Object"
+        }
+      },
+      "triggers": {
+        "When_a_row_is_added,_modified_or_deleted": {
+          "type": "OpenApiConnectionWebhook",
+          "inputs": {
+            "parameters": {
+              "subscriptionRequest/message": 3,
+              "subscriptionRequest/entityname": "spear_nominalroll",
+              "subscriptionRequest/scope": 4,
+              "subscriptionRequest/filteringattributes": "spear_responsecheck",
+              "subscriptionRequest/filterexpression": "spear_responsecheck eq 939290000"
+            },
+            "host": {
+              "apiId": "/providers/Microsoft.PowerApps/apis/shared_commondataserviceforapps",
+              "operationId": "SubscribeWebhookTrigger",
+              "connectionName": "shared_commondataserviceforapps"
+            }
+          }
+        }
+      },
+      "actions": {
+        "List_the_members_of_a_team_tag": {
+          "type": "OpenApiConnection",
+          "inputs": {
+            "parameters": {
+              "groupId": "98861591-14a4-425a-97b4-092ec3044122",
+              "tagId": "@triggerOutputs()?['body/spear_teamtagid']"
+            },
+            "host": {
+              "apiId": "/providers/Microsoft.PowerApps/apis/shared_teams",
+              "operationId": "GetTagMembers",
+              "connectionName": "shared_teams"
+            }
+          },
+          "runAfter": {}
+        },
+        "For_each": {
+          "type": "Foreach",
+          "foreach": "@outputs('List_the_members_of_a_team_tag')?['body/value']",
+          "actions": {
+            "Condition": {
+              "type": "If",
+              "expression": {
+                "and": [
+                  {
+                    "equals": [
+                      "@items('For_each')?['userId']",
+                      "@triggerOutputs()?['body/spear_entraobjectid']"
+                    ]
+                  }
+                ]
+              },
+              "actions": {
+                "Delete_a_member_from_a_team_tag": {
+                  "type": "OpenApiConnection",
+                  "inputs": {
+                    "parameters": {
+                      "groupId": "98861591-14a4-425a-97b4-092ec3044122",
+                      "tagId": "@triggerOutputs()?['body/spear_teamtagid']",
+                      "tagMemberId": "@items('For_each')?['id']"
+                    },
+                    "host": {
+                      "apiId": "/providers/Microsoft.PowerApps/apis/shared_teams",
+                      "operationId": "DeleteTagMember",
+                      "connectionName": "shared_teams"
+                    }
+                  }
+                }
+              },
+              "else": {
+                "actions": {}
+              }
+            }
+          },
+          "runAfter": {
+            "List_the_members_of_a_team_tag": [
+              "Succeeded"
+            ]
+          }
+        }
+      }
+    },
+    "templateName": null
+  },
+  "schemaVersion": "1.0.0.0"
+}

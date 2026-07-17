@@ -1,0 +1,81 @@
+{
+  "properties": {
+    "connectionReferences": {
+      "shared_teams": {
+        "api": {
+          "name": "shared_teams"
+        },
+        "connection": {
+          "connectionReferenceLogicalName": "spear_sharedteams_f364f"
+        },
+        "runtimeSource": "invoker"
+      }
+    },
+    "definition": {
+      "$schema": "https://schema.management.azure.com/providers/Microsoft.Logic/schemas/2016-06-01/workflowdefinition.json#",
+      "contentVersion": "1.0.0.0",
+      "parameters": {
+        "$authentication": {
+          "defaultValue": {},
+          "type": "SecureObject"
+        },
+        "$connections": {
+          "defaultValue": {},
+          "type": "Object"
+        }
+      },
+      "triggers": {
+        "manual": {
+          "type": "Request",
+          "kind": "PowerAppV2",
+          "inputs": {
+            "schema": {
+              "type": "object",
+              "properties": {
+                "text": {
+                  "title": "Name",
+                  "type": "string",
+                  "x-ms-dynamically-added": true,
+                  "description": "Triggeredby",
+                  "x-ms-content-hint": "TEXT"
+                }
+              },
+              "required": [
+                "text"
+              ]
+            }
+          },
+          "metadata": {
+            "operationMetadataId": "39f99174-9091-4d24-92df-b8a0f973f518"
+          }
+        }
+      },
+      "actions": {
+        "Post_message_in_a_chat_or_channel": {
+          "type": "OpenApiConnection",
+          "inputs": {
+            "parameters": {
+              "poster": "User",
+              "location": "Channel",
+              "body/recipient/groupId": "98861591-14a4-425a-97b4-092ec3044122",
+              "body/recipient/channelId": "19:HJ_bevckQuvLl5bdKDr72rs0g6Pz6CMYENBcrMOZe641@thread.tacv2",
+              "body/messageBody": "<p class=\"editor-paragraph\">Ended by @{triggerBody()['text']}</p>",
+              "body/subject": "Recall ended"
+            },
+            "host": {
+              "apiId": "/providers/Microsoft.PowerApps/apis/shared_teams",
+              "operationId": "PostMessageToConversation",
+              "connectionName": "shared_teams"
+            }
+          },
+          "runAfter": {},
+          "metadata": {
+            "operationMetadataId": "8a87857c-6675-4c6d-b659-e915bad7e3bd"
+          }
+        }
+      }
+    },
+    "templateName": null
+  },
+  "schemaVersion": "1.0.0.0"
+}

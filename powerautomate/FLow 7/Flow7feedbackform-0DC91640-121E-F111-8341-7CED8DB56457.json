@@ -1,0 +1,88 @@
+{
+  "properties": {
+    "connectionReferences": {
+      "shared_excelonlinebusiness-2": {
+        "api": {
+          "name": "shared_excelonlinebusiness"
+        },
+        "connection": {
+          "connectionReferenceLogicalName": "new_sharedexcelonlinebusiness_43cd3"
+        },
+        "runtimeSource": "invoker"
+      }
+    },
+    "definition": {
+      "$schema": "https://schema.management.azure.com/providers/Microsoft.Logic/schemas/2016-06-01/workflowdefinition.json#",
+      "contentVersion": "undefined",
+      "parameters": {
+        "$authentication": {
+          "defaultValue": {},
+          "type": "SecureObject"
+        },
+        "$connections": {
+          "defaultValue": {},
+          "type": "Object"
+        }
+      },
+      "triggers": {
+        "manual": {
+          "type": "Request",
+          "kind": "PowerAppV2",
+          "inputs": {
+            "schema": {
+              "type": "object",
+              "properties": {
+                "text": {
+                  "description": "triggerby",
+                  "title": "Name",
+                  "type": "string",
+                  "x-ms-content-hint": "TEXT",
+                  "x-ms-dynamically-added": true
+                },
+                "text_1": {
+                  "description": "",
+                  "title": "Feedback",
+                  "type": "string",
+                  "x-ms-content-hint": "TEXT",
+                  "x-ms-dynamically-added": true
+                }
+              },
+              "required": [
+                "text",
+                "text_1"
+              ]
+            }
+          }
+        }
+      },
+      "actions": {
+        "Add_a_row_into_a_table": {
+          "type": "OpenApiConnection",
+          "inputs": {
+            "parameters": {
+              "source": "groups/98861591-14a4-425a-97b4-092ec3044122",
+              "drive": "b!qkUsy_0tXki1gV5VXY9xt9jL4OiToVpFmqq6BeSnqyPaoEwvbaJFQqLEt-wEZQd8",
+              "file": "01V22LKKBANVARAMKUM5HISHPWKFDGOOXW",
+              "table": "{A3A5AEBA-B229-4854-8EFD-4FDC0BD68FD1}",
+              "item/DATE ": "@formatDateTime(addHours(utcNow(), 8), 'dd-MM-yyyy')",
+              "item/NAME": "@triggerBody()?['text']",
+              "item/FEEDBACK": "@triggerBody()?['text_1']"
+            },
+            "host": {
+              "apiId": "/providers/Microsoft.PowerApps/apis/shared_excelonlinebusiness",
+              "operationId": "AddRowV2",
+              "connectionName": "shared_excelonlinebusiness-2"
+            }
+          },
+          "runAfter": {},
+          "metadata": {
+            "01V22LKKBANVARAMKUM5HISHPWKFDGOOXW": "/TU 1/ALWAYS READY APP FEEDBACKS.xlsx",
+            "tableId": "{A3A5AEBA-B229-4854-8EFD-4FDC0BD68FD1}"
+          }
+        }
+      }
+    },
+    "templateName": null
+  },
+  "schemaVersion": "1.0.0.0"
+}

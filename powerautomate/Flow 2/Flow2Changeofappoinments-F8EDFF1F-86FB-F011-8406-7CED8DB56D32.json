@@ -1,0 +1,177 @@
+{
+  "properties": {
+    "connectionReferences": {
+      "shared_commondataserviceforapps": {
+        "api": {
+          "name": "shared_commondataserviceforapps"
+        },
+        "connection": {
+          "connectionReferenceLogicalName": "spear_sharedcommondataserviceforapps_9d232"
+        },
+        "runtimeSource": "embedded"
+      },
+      "shared_teams": {
+        "api": {
+          "name": "shared_teams"
+        },
+        "connection": {
+          "connectionReferenceLogicalName": "spear_sharedteams_f364f"
+        },
+        "runtimeSource": "embedded"
+      }
+    },
+    "definition": {
+      "$schema": "https://schema.management.azure.com/providers/Microsoft.Logic/schemas/2016-06-01/workflowdefinition.json#",
+      "contentVersion": "1.0.0.0",
+      "parameters": {
+        "$authentication": {
+          "defaultValue": {},
+          "type": "SecureObject"
+        },
+        "$connections": {
+          "defaultValue": {},
+          "type": "Object"
+        }
+      },
+      "triggers": {
+        "When_a_row_is_added,_modified_or_deleted": {
+          "type": "OpenApiConnectionWebhook",
+          "inputs": {
+            "parameters": {
+              "subscriptionRequest/message": 3,
+              "subscriptionRequest/entityname": "spear_nominalroll",
+              "subscriptionRequest/scope": 4,
+              "subscriptionRequest/filteringattributes": "spear_exname"
+            },
+            "host": {
+              "apiId": "/providers/Microsoft.PowerApps/apis/shared_commondataserviceforapps",
+              "operationId": "SubscribeWebhookTrigger",
+              "connectionName": "shared_commondataserviceforapps"
+            }
+          },
+          "conditions": [],
+          "metadata": {
+            "operationMetadataId": "14e357b2-0623-449b-912b-b30bf94cb868"
+          }
+        }
+      },
+      "actions": {
+        "Post_message_in_a_chat_or_channel_new_user": {
+          "type": "OpenApiConnection",
+          "inputs": {
+            "parameters": {
+              "poster": "Flow bot",
+              "location": "Chat with Flow bot",
+              "body/recipient": "@outputs('Get_a_email_from_current_user')?['body/spear_email']",
+              "body/messageBody": "<p class=\"editor-paragraph\"><b><strong class=\"editor-text-bold\">TAKING OVER APPOINTMENT</strong></b></p><br><p class=\"editor-paragraph\">@{triggerOutputs()?['body/spear_appointment']} :</p><p class=\"editor-paragraph\">@{outputs('Get_a_email_from_current_user')?['body/spear_fullname']} Take over from @{outputs('Get_a_email_from_old_user')?['body/spear_fullname']}</p>"
+            },
+            "host": {
+              "apiId": "/providers/Microsoft.PowerApps/apis/shared_teams",
+              "operationId": "PostMessageToConversation",
+              "connectionName": "shared_teams"
+            }
+          },
+          "runAfter": {
+            "Get_a_email_from_old_user": [
+              "Succeeded"
+            ]
+          },
+          "metadata": {
+            "operationMetadataId": "e4ae824f-9a0d-448f-9d6f-29bdd65bc29c"
+          }
+        },
+        "Post_message_in_a_chat_or_channel_old_user": {
+          "type": "OpenApiConnection",
+          "inputs": {
+            "parameters": {
+              "poster": "Flow bot",
+              "location": "Chat with Flow bot",
+              "body/recipient": "@outputs('Get_a_email_from_old_user')?['body/spear_email']",
+              "body/messageBody": "<p class=\"editor-paragraph\"><b><strong class=\"editor-text-bold\">HANDING OVER APPOINTMENT</strong></b></p><br><p class=\"editor-paragraph\">@{triggerOutputs()?['body/spear_appointment']} :</p><p class=\"editor-paragraph\">@{outputs('Get_a_email_from_old_user')?['body/spear_fullname']} Hand over to @{outputs('Get_a_email_from_current_user')?['body/spear_fullname']}</p>"
+            },
+            "host": {
+              "apiId": "/providers/Microsoft.PowerApps/apis/shared_teams",
+              "operationId": "PostMessageToConversation",
+              "connectionName": "shared_teams"
+            }
+          },
+          "runAfter": {
+            "Get_a_email_from_old_user": [
+              "Succeeded"
+            ]
+          },
+          "metadata": {
+            "operationMetadataId": "f9cafd78-700a-4c93-997f-ba129878cc61"
+          }
+        },
+        "Get_a_email_from_current_user": {
+          "type": "OpenApiConnection",
+          "inputs": {
+            "parameters": {
+              "entityName": "spear_persondirectories",
+              "recordId": "@triggerOutputs()?['body/_spear_name_value']"
+            },
+            "host": {
+              "apiId": "/providers/Microsoft.PowerApps/apis/shared_commondataserviceforapps",
+              "operationId": "GetItem",
+              "connectionName": "shared_commondataserviceforapps"
+            }
+          },
+          "runAfter": {},
+          "metadata": {
+            "operationMetadataId": "6e80385d-2993-41f9-b2c2-9ada8f3c5818"
+          }
+        },
+        "Get_a_email_from_old_user": {
+          "type": "OpenApiConnection",
+          "inputs": {
+            "parameters": {
+              "entityName": "spear_persondirectories",
+              "recordId": "@triggerOutputs()?['body/_spear_exname_value']"
+            },
+            "host": {
+              "apiId": "/providers/Microsoft.PowerApps/apis/shared_commondataserviceforapps",
+              "operationId": "GetItem",
+              "connectionName": "shared_commondataserviceforapps"
+            }
+          },
+          "runAfter": {
+            "Get_a_email_from_current_user": [
+              "Succeeded"
+            ]
+          },
+          "metadata": {
+            "operationMetadataId": "282d9308-4029-4a1b-bb94-8a2ac76b043a"
+          }
+        },
+        "Post_message_in_a_chat_or_channel": {
+          "type": "OpenApiConnection",
+          "inputs": {
+            "parameters": {
+              "poster": "Flow bot",
+              "location": "Chat with Flow bot",
+              "body/recipient": "Lam_Chee_Heng@defence.gov.sg",
+              "body/messageBody": "<p class=\"editor-paragraph\">Flow 2 Chnage of appointment notification has failed</p>"
+            },
+            "host": {
+              "apiId": "/providers/Microsoft.PowerApps/apis/shared_teams",
+              "operationId": "PostMessageToConversation",
+              "connectionName": "shared_teams"
+            }
+          },
+          "runAfter": {
+            "Post_message_in_a_chat_or_channel_new_user": [
+              "Failed"
+            ],
+            "Post_message_in_a_chat_or_channel_old_user": [
+              "Failed"
+            ]
+          }
+        }
+      },
+      "outputs": {}
+    },
+    "templateName": null
+  },
+  "schemaVersion": "1.0.0.0"
+}

@@ -1,0 +1,1306 @@
+{
+  "properties": {
+    "connectionReferences": {
+      "shared_commondataserviceforapps": {
+        "api": {
+          "name": "shared_commondataserviceforapps"
+        },
+        "connection": {
+          "connectionReferenceLogicalName": "spear_sharedcommondataserviceforapps_9d232"
+        },
+        "runtimeSource": "embedded"
+      },
+      "shared_teams": {
+        "api": {
+          "name": "shared_teams"
+        },
+        "connection": {
+          "connectionReferenceLogicalName": "spear_sharedteams_f364f"
+        },
+        "runtimeSource": "invoker"
+      }
+    },
+    "definition": {
+      "$schema": "https://schema.management.azure.com/providers/Microsoft.Logic/schemas/2016-06-01/workflowdefinition.json#",
+      "contentVersion": "1.0.0.0",
+      "parameters": {
+        "$authentication": {
+          "defaultValue": {},
+          "type": "SecureObject"
+        },
+        "$connections": {
+          "defaultValue": {},
+          "type": "Object"
+        }
+      },
+      "triggers": {
+        "manual": {
+          "type": "Request",
+          "kind": "PowerAppV2",
+          "inputs": {
+            "schema": {
+              "type": "object",
+              "properties": {
+                "text": {
+                  "title": "Name",
+                  "type": "string",
+                  "x-ms-dynamically-added": true,
+                  "description": "Triggerbyname",
+                  "x-ms-content-hint": "TEXT"
+                }
+              },
+              "required": [
+                "text"
+              ]
+            }
+          },
+          "metadata": {
+            "operationMetadataId": "01402fef-f1b5-43f3-833e-bdbec861b167"
+          }
+        }
+      },
+      "actions": {
+        "List_rows": {
+          "type": "OpenApiConnection",
+          "inputs": {
+            "parameters": {
+              "entityName": "spear_nominalrolls",
+              "$filter": "modifiedon ge @{formatDateTime(addHours(utcNow(),-1),'yyyy-MM-ddTHH:mm:ssZ')}",
+              "$orderby": "spear_sn asc"
+            },
+            "host": {
+              "apiId": "/providers/Microsoft.PowerApps/apis/shared_commondataserviceforapps",
+              "operationId": "ListRecords",
+              "connectionName": "shared_commondataserviceforapps"
+            }
+          },
+          "runAfter": {
+            "Initialize_variable_PL3": [
+              "Succeeded"
+            ]
+          },
+          "metadata": {
+            "operationMetadataId": "ac628d62-f75c-44e8-8682-68b3dbe6b92f"
+          }
+        },
+        "Initialize_variable_FCS": {
+          "type": "InitializeVariable",
+          "inputs": {
+            "variables": [
+              {
+                "name": "FCS",
+                "type": "string"
+              }
+            ]
+          },
+          "runAfter": {
+            "Get_an_@mention_token_for_a_team_tag": [
+              "SUCCEEDED"
+            ]
+          },
+          "metadata": {
+            "operationMetadataId": "d635d7fe-db4d-4f55-ad27-608c70ca9825"
+          }
+        },
+        "Initialize_variable_CHQ": {
+          "type": "InitializeVariable",
+          "inputs": {
+            "variables": [
+              {
+                "name": "CHQ",
+                "type": "string"
+              }
+            ]
+          },
+          "runAfter": {
+            "Initialize_variable_FCS": [
+              "Succeeded"
+            ]
+          },
+          "metadata": {
+            "operationMetadataId": "c821af74-2d9b-4ba9-860d-61fcc08c9cec"
+          }
+        },
+        "For_each_1": {
+          "type": "Foreach",
+          "foreach": "@body('Filter_array_1')",
+          "actions": {
+            "Append_to_string_variable_1": {
+              "type": "AppendToStringVariable",
+              "inputs": {
+                "name": "CHQ",
+                "value": "@{items('For_each_1')?['spear_appointment']} : @{item()?['_spear_name_value@OData.Community.Display.V1.FormattedValue']} <br>"
+              },
+              "metadata": {
+                "operationMetadataId": "48fbd1f4-bc43-4c48-9cb7-772c59965c6a"
+              }
+            }
+          },
+          "runAfter": {
+            "Filter_array_1": [
+              "Succeeded"
+            ]
+          },
+          "runtimeConfiguration": {
+            "concurrency": {
+              "repetitions": 50
+            }
+          },
+          "metadata": {
+            "operationMetadataId": "e904bca4-6438-40dd-b14e-ee46665979e9"
+          }
+        },
+        "Initialize_variable_ANT": {
+          "type": "InitializeVariable",
+          "inputs": {
+            "variables": [
+              {
+                "name": "Ant",
+                "type": "string"
+              }
+            ]
+          },
+          "runAfter": {
+            "Initialize_variable_CHQ": [
+              "Succeeded"
+            ]
+          },
+          "metadata": {
+            "operationMetadataId": "508d650b-94b0-4042-b375-b26470aecb16"
+          }
+        },
+        "For_each_2": {
+          "type": "Foreach",
+          "foreach": "@body('Filter_array_1_1')",
+          "actions": {
+            "Append_to_string_variable_1_1": {
+              "type": "AppendToStringVariable",
+              "inputs": {
+                "name": "Ant",
+                "value": "@{items('For_each_2')?['spear_appointment']} : @{item()?['_spear_name_value@OData.Community.Display.V1.FormattedValue']} <br>"
+              },
+              "metadata": {
+                "operationMetadataId": "0bbcf619-fc26-4fd1-ae25-77e0d699f0d8"
+              }
+            }
+          },
+          "runAfter": {
+            "Filter_array_1_1": [
+              "Succeeded"
+            ]
+          },
+          "runtimeConfiguration": {
+            "concurrency": {
+              "repetitions": 50
+            }
+          },
+          "metadata": {
+            "operationMetadataId": "857962a4-5733-4c7f-bab6-58fcef962dc4"
+          }
+        },
+        "Initialize_variable_SNP": {
+          "type": "InitializeVariable",
+          "inputs": {
+            "variables": [
+              {
+                "name": "SNP",
+                "type": "string"
+              }
+            ]
+          },
+          "runAfter": {
+            "Initialize_variable_ANT": [
+              "Succeeded"
+            ]
+          },
+          "metadata": {
+            "operationMetadataId": "f3e212ec-c07f-41d5-b75e-c533ff3a29df"
+          }
+        },
+        "For_each_3": {
+          "type": "Foreach",
+          "foreach": "@body('Filter_array_1_2')",
+          "actions": {
+            "Append_to_string_variable_1_1_1": {
+              "type": "AppendToStringVariable",
+              "inputs": {
+                "name": "SNP",
+                "value": "@{items('For_each_3')?['spear_appointment']} : @{item()?['_spear_name_value@OData.Community.Display.V1.FormattedValue']} <br>"
+              },
+              "metadata": {
+                "operationMetadataId": "420a3d0d-046d-4fa8-b80c-37cb63ea9f89"
+              }
+            }
+          },
+          "runAfter": {
+            "Filter_array_1_2": [
+              "Succeeded"
+            ]
+          },
+          "runtimeConfiguration": {
+            "concurrency": {
+              "repetitions": 50
+            }
+          },
+          "metadata": {
+            "operationMetadataId": "1adfce85-cd4b-42dc-9e48-e8853e3e94ff"
+          }
+        },
+        "Initialize_variable_PTF": {
+          "type": "InitializeVariable",
+          "inputs": {
+            "variables": [
+              {
+                "name": "PTF",
+                "type": "string"
+              }
+            ]
+          },
+          "runAfter": {
+            "Initialize_variable_SNP": [
+              "Succeeded"
+            ]
+          },
+          "metadata": {
+            "operationMetadataId": "07d78a6b-98bc-434e-afc1-f765eb7e9b9b"
+          }
+        },
+        "For_each_4": {
+          "type": "Foreach",
+          "foreach": "@body('Filter_array_1_3')",
+          "actions": {
+            "Append_to_string_variable_1_1_1_1": {
+              "type": "AppendToStringVariable",
+              "inputs": {
+                "name": "PTF",
+                "value": "@{items('For_each_4')?['spear_appointment']} : @{item()?['_spear_name_value@OData.Community.Display.V1.FormattedValue']} <br>"
+              },
+              "metadata": {
+                "operationMetadataId": "b6462500-d2d2-4c24-8606-c8caf01cb965"
+              }
+            }
+          },
+          "runAfter": {
+            "Filter_array_1_3": [
+              "Succeeded"
+            ]
+          },
+          "runtimeConfiguration": {
+            "concurrency": {
+              "repetitions": 50
+            }
+          },
+          "metadata": {
+            "operationMetadataId": "d497b871-a112-42c9-ae6c-e0e716753eca"
+          }
+        },
+        "Initialize_variable_STN": {
+          "type": "InitializeVariable",
+          "inputs": {
+            "variables": [
+              {
+                "name": "STN",
+                "type": "string"
+              }
+            ]
+          },
+          "runAfter": {
+            "Initialize_variable_PTF": [
+              "Succeeded"
+            ]
+          },
+          "metadata": {
+            "operationMetadataId": "3ebd065d-6f1a-4423-b6da-28efc2cf8de9"
+          }
+        },
+        "For_each_5": {
+          "type": "Foreach",
+          "foreach": "@body('Filter_array_1_4')",
+          "actions": {
+            "Append_to_string_variable_1_1_1_1_1": {
+              "type": "AppendToStringVariable",
+              "inputs": {
+                "name": "STN",
+                "value": "@{items('For_each_5')?['spear_appointment']} : @{item()?['_spear_name_value@OData.Community.Display.V1.FormattedValue']} <br>"
+              },
+              "metadata": {
+                "operationMetadataId": "0afed2a6-63f6-4f80-98b0-e554ab3c0563"
+              }
+            }
+          },
+          "runAfter": {
+            "Filter_array_1_4": [
+              "Succeeded"
+            ]
+          },
+          "runtimeConfiguration": {
+            "concurrency": {
+              "repetitions": 50
+            }
+          },
+          "metadata": {
+            "operationMetadataId": "c7fee3bc-2ee2-43e0-8357-287753682fad"
+          }
+        },
+        "Initialize_variable_PL1_": {
+          "type": "InitializeVariable",
+          "inputs": {
+            "variables": [
+              {
+                "name": "PL 1",
+                "type": "string"
+              }
+            ]
+          },
+          "runAfter": {
+            "Initialize_variable_STN": [
+              "Succeeded"
+            ]
+          },
+          "metadata": {
+            "operationMetadataId": "3b496f6c-44f8-4d0d-8a68-41518dff344c"
+          }
+        },
+        "For_each_6": {
+          "type": "Foreach",
+          "foreach": "@body('Filter_array_1_5')",
+          "actions": {
+            "Append_to_string_variable_1_1_1_1_1_1": {
+              "type": "AppendToStringVariable",
+              "inputs": {
+                "name": "PL 1",
+                "value": "@{items('For_each_6')?['spear_appointment']} : @{item()?['_spear_name_value@OData.Community.Display.V1.FormattedValue']} <br>"
+              },
+              "metadata": {
+                "operationMetadataId": "fd26df12-081b-4974-962e-9216707d0b6c"
+              }
+            }
+          },
+          "runAfter": {
+            "Filter_array_1_5": [
+              "Succeeded"
+            ]
+          },
+          "runtimeConfiguration": {
+            "concurrency": {
+              "repetitions": 50
+            }
+          },
+          "metadata": {
+            "operationMetadataId": "51927c4c-c729-437c-9081-9a9d8e4e7e1e"
+          }
+        },
+        "Initialize_variable_PL2": {
+          "type": "InitializeVariable",
+          "inputs": {
+            "variables": [
+              {
+                "name": "PL2",
+                "type": "string"
+              }
+            ]
+          },
+          "runAfter": {
+            "Initialize_variable_PL1_": [
+              "Succeeded"
+            ]
+          },
+          "metadata": {
+            "operationMetadataId": "1fda4ec8-9c4f-4baf-9771-27e31f822c5f"
+          }
+        },
+        "For_each_7": {
+          "type": "Foreach",
+          "foreach": "@body('Filter_array_1_6')",
+          "actions": {
+            "Append_to_string_variable_1_1_1_1_1_2": {
+              "type": "AppendToStringVariable",
+              "inputs": {
+                "name": "PL2",
+                "value": "@{items('For_each_7')?['spear_appointment']} : @{item()?['_spear_name_value@OData.Community.Display.V1.FormattedValue']} <br>"
+              },
+              "metadata": {
+                "operationMetadataId": "f471f8d2-27fc-4016-adbf-f201e40cbcd2"
+              }
+            }
+          },
+          "runAfter": {
+            "Filter_array_1_6": [
+              "Succeeded"
+            ]
+          },
+          "runtimeConfiguration": {
+            "concurrency": {
+              "repetitions": 50
+            }
+          },
+          "metadata": {
+            "operationMetadataId": "974bcba4-6691-4c30-8ab4-4c9a8f10cb52"
+          }
+        },
+        "Initialize_variable_PL3": {
+          "type": "InitializeVariable",
+          "inputs": {
+            "variables": [
+              {
+                "name": "PL3",
+                "type": "string"
+              }
+            ]
+          },
+          "runAfter": {
+            "Initialize_variable_PL2": [
+              "Succeeded"
+            ]
+          },
+          "metadata": {
+            "operationMetadataId": "9cda5497-aefa-41b6-9e4b-171e6622ee68"
+          }
+        },
+        "For_each_8": {
+          "type": "Foreach",
+          "foreach": "@body('Filter_array_1_7')",
+          "actions": {
+            "Append_to_string_variable_1_1_1_1_1_2_1": {
+              "type": "AppendToStringVariable",
+              "inputs": {
+                "name": "PL3",
+                "value": "@{items('For_each_8')?['spear_appointment']} : @{item()?['_spear_name_value@OData.Community.Display.V1.FormattedValue']} <br>"
+              },
+              "metadata": {
+                "operationMetadataId": "8c4e777b-de64-46be-ba91-1330f9c86d49"
+              }
+            }
+          },
+          "runAfter": {
+            "Filter_array_1_7": [
+              "Succeeded"
+            ]
+          },
+          "runtimeConfiguration": {
+            "concurrency": {
+              "repetitions": 50
+            }
+          },
+          "metadata": {
+            "operationMetadataId": "b02e4672-6506-454b-9ab9-435bfd50d52a"
+          }
+        },
+        "Filter_array": {
+          "type": "Query",
+          "inputs": {
+            "from": "@outputs('List_rows')?['body/value']",
+            "where": "@equals(item()?['spear_entity'],'FCS')"
+          },
+          "runAfter": {
+            "List_rows": [
+              "Succeeded"
+            ]
+          },
+          "metadata": {
+            "operationMetadataId": "56c11e2d-486b-4bf9-881a-f0fe6c9da5a0"
+          }
+        },
+        "Filter_array_1": {
+          "type": "Query",
+          "inputs": {
+            "from": "@outputs('List_rows')?['body/value']",
+            "where": "@equals(item()?['spear_entity'],'CHQ')"
+          },
+          "runAfter": {
+            "List_rows": [
+              "Succeeded"
+            ]
+          },
+          "metadata": {
+            "operationMetadataId": "d98c06f5-c31e-4531-919a-f3a3aae6d062"
+          }
+        },
+        "Filter_array_1_1": {
+          "type": "Query",
+          "inputs": {
+            "from": "@outputs('List_rows')?['body/value']",
+            "where": "@equals(item()?['spear_entity'],'ANT')"
+          },
+          "runAfter": {
+            "List_rows": [
+              "Succeeded"
+            ]
+          },
+          "metadata": {
+            "operationMetadataId": "d3d2c75e-85df-42df-8e92-bff3d258dde1"
+          }
+        },
+        "Filter_array_1_2": {
+          "type": "Query",
+          "inputs": {
+            "from": "@outputs('List_rows')?['body/value']",
+            "where": "@equals(item()?['spear_entity'],'SNP')"
+          },
+          "runAfter": {
+            "List_rows": [
+              "Succeeded"
+            ]
+          },
+          "metadata": {
+            "operationMetadataId": "33f76e19-16a7-4694-ac99-b6e669d40db8"
+          }
+        },
+        "Filter_array_1_3": {
+          "type": "Query",
+          "inputs": {
+            "from": "@outputs('List_rows')?['body/value']",
+            "where": "@equals(item()?['spear_entity'],'PTF')"
+          },
+          "runAfter": {
+            "List_rows": [
+              "Succeeded"
+            ]
+          },
+          "metadata": {
+            "operationMetadataId": "5a89e769-2cec-4d2e-b5ea-35fd0a09bf3e"
+          }
+        },
+        "Filter_array_1_4": {
+          "type": "Query",
+          "inputs": {
+            "from": "@outputs('List_rows')?['body/value']",
+            "where": "@equals(item()?['spear_entity'],'STN')"
+          },
+          "runAfter": {
+            "List_rows": [
+              "Succeeded"
+            ]
+          },
+          "metadata": {
+            "operationMetadataId": "5b171f69-e669-45d7-93b2-58795428793c"
+          }
+        },
+        "Filter_array_1_5": {
+          "type": "Query",
+          "inputs": {
+            "from": "@outputs('List_rows')?['body/value']",
+            "where": "@equals(item()?['spear_entity'],'PL1')"
+          },
+          "runAfter": {
+            "List_rows": [
+              "Succeeded"
+            ]
+          },
+          "metadata": {
+            "operationMetadataId": "07430b93-42a0-41c8-b446-c742d1e18a29"
+          }
+        },
+        "Filter_array_1_6": {
+          "type": "Query",
+          "inputs": {
+            "from": "@outputs('List_rows')?['body/value']",
+            "where": "@equals(item()?['spear_entity'],'PL2')"
+          },
+          "runAfter": {
+            "List_rows": [
+              "Succeeded"
+            ]
+          },
+          "metadata": {
+            "operationMetadataId": "d3650b0f-2e6e-488c-b3af-22e11c5c0edd"
+          }
+        },
+        "Filter_array_1_7": {
+          "type": "Query",
+          "inputs": {
+            "from": "@outputs('List_rows')?['body/value']",
+            "where": "@equals(item()?['spear_entity'],'PL3')"
+          },
+          "runAfter": {
+            "List_rows": [
+              "Succeeded"
+            ]
+          },
+          "metadata": {
+            "operationMetadataId": "2180ba7b-2109-4431-9b37-322d188c5a31"
+          }
+        },
+        "For_each": {
+          "type": "Foreach",
+          "foreach": "@body('Filter_array')",
+          "actions": {
+            "Append_to_string_variable": {
+              "type": "AppendToStringVariable",
+              "inputs": {
+                "name": "FCS",
+                "value": "@{items('For_each')?['spear_appointment']} : @{item()?['_spear_name_value@OData.Community.Display.V1.FormattedValue']} <br>"
+              },
+              "metadata": {
+                "operationMetadataId": "7847d6c2-aba4-4e5a-b7e2-21aacb6cbadf"
+              }
+            }
+          },
+          "runAfter": {
+            "Filter_array": [
+              "Succeeded"
+            ]
+          },
+          "runtimeConfiguration": {
+            "concurrency": {
+              "repetitions": 50
+            }
+          },
+          "metadata": {
+            "operationMetadataId": "811ff278-75d3-4171-95a0-adbc3b7ad968"
+          }
+        },
+        "Initialize_variable_FCS_2": {
+          "type": "InitializeVariable",
+          "inputs": {
+            "variables": [
+              {
+                "name": "FCS2",
+                "type": "string"
+              }
+            ]
+          },
+          "runAfter": {
+            "Get_an_@mention_token_for_a_team_tag": [
+              "SUCCEEDED"
+            ]
+          },
+          "metadata": {
+            "operationMetadataId": "d635d7fe-db4d-4f55-ad27-608c70ca9825"
+          }
+        },
+        "Initialize_variable_CHQ_2": {
+          "type": "InitializeVariable",
+          "inputs": {
+            "variables": [
+              {
+                "name": "CHQ2",
+                "type": "string"
+              }
+            ]
+          },
+          "runAfter": {
+            "Initialize_variable_FCS_2": [
+              "Succeeded"
+            ]
+          },
+          "metadata": {
+            "operationMetadataId": "c821af74-2d9b-4ba9-860d-61fcc08c9cec"
+          }
+        },
+        "Initialize_variable_ANT_2": {
+          "type": "InitializeVariable",
+          "inputs": {
+            "variables": [
+              {
+                "name": "Ant2",
+                "type": "string"
+              }
+            ]
+          },
+          "runAfter": {
+            "Initialize_variable_CHQ_2": [
+              "Succeeded"
+            ]
+          },
+          "metadata": {
+            "operationMetadataId": "508d650b-94b0-4042-b375-b26470aecb16"
+          }
+        },
+        "Initialize_variable_SNP_2": {
+          "type": "InitializeVariable",
+          "inputs": {
+            "variables": [
+              {
+                "name": "SNP2",
+                "type": "string"
+              }
+            ]
+          },
+          "runAfter": {
+            "Initialize_variable_ANT_2": [
+              "Succeeded"
+            ]
+          },
+          "metadata": {
+            "operationMetadataId": "f3e212ec-c07f-41d5-b75e-c533ff3a29df"
+          }
+        },
+        "Initialize_variable_PTF2": {
+          "type": "InitializeVariable",
+          "inputs": {
+            "variables": [
+              {
+                "name": "PTF2",
+                "type": "string"
+              }
+            ]
+          },
+          "runAfter": {
+            "Initialize_variable_SNP_2": [
+              "Succeeded"
+            ]
+          },
+          "metadata": {
+            "operationMetadataId": "07d78a6b-98bc-434e-afc1-f765eb7e9b9b"
+          }
+        },
+        "Initialize_variable_STN_2": {
+          "type": "InitializeVariable",
+          "inputs": {
+            "variables": [
+              {
+                "name": "STN2",
+                "type": "string"
+              }
+            ]
+          },
+          "runAfter": {
+            "Initialize_variable_PTF2": [
+              "Succeeded"
+            ]
+          },
+          "metadata": {
+            "operationMetadataId": "3ebd065d-6f1a-4423-b6da-28efc2cf8de9"
+          }
+        },
+        "Initialize_variable_PL12": {
+          "type": "InitializeVariable",
+          "inputs": {
+            "variables": [
+              {
+                "name": "PL 12",
+                "type": "string"
+              }
+            ]
+          },
+          "runAfter": {
+            "Initialize_variable_STN_2": [
+              "Succeeded"
+            ]
+          },
+          "metadata": {
+            "operationMetadataId": "3b496f6c-44f8-4d0d-8a68-41518dff344c"
+          }
+        },
+        "Initialize_variable_PL22": {
+          "type": "InitializeVariable",
+          "inputs": {
+            "variables": [
+              {
+                "name": "PL22",
+                "type": "string"
+              }
+            ]
+          },
+          "runAfter": {
+            "Initialize_variable_PL12": [
+              "Succeeded"
+            ]
+          },
+          "metadata": {
+            "operationMetadataId": "1fda4ec8-9c4f-4baf-9771-27e31f822c5f"
+          }
+        },
+        "Initialize_variable_PL3_1": {
+          "type": "InitializeVariable",
+          "inputs": {
+            "variables": [
+              {
+                "name": "PL32",
+                "type": "string"
+              }
+            ]
+          },
+          "runAfter": {
+            "Initialize_variable_PL22": [
+              "Succeeded"
+            ]
+          },
+          "metadata": {
+            "operationMetadataId": "9cda5497-aefa-41b6-9e4b-171e6622ee68"
+          }
+        },
+        "List_rows_1": {
+          "type": "OpenApiConnection",
+          "inputs": {
+            "parameters": {
+              "entityName": "spear_nominalrolls",
+              "$filter": "modifiedon ge @{formatDateTime(addHours(utcNow(),-1),'yyyy-MM-ddTHH:mm:ssZ')}",
+              "$orderby": "spear_sn asc"
+            },
+            "host": {
+              "apiId": "/providers/Microsoft.PowerApps/apis/shared_commondataserviceforapps",
+              "operationId": "ListRecords",
+              "connectionName": "shared_commondataserviceforapps"
+            }
+          },
+          "runAfter": {
+            "Initialize_variable_PL3_1": [
+              "Succeeded"
+            ]
+          },
+          "metadata": {
+            "operationMetadataId": "ac628d62-f75c-44e8-8682-68b3dbe6b92f"
+          }
+        },
+        "Filter_array_2": {
+          "type": "Query",
+          "inputs": {
+            "from": "@outputs('List_rows_1')?['body/value']",
+            "where": "@equals(item()?['spear_entity'],'FCS2')"
+          },
+          "runAfter": {
+            "List_rows_1": [
+              "Succeeded"
+            ]
+          }
+        },
+        "Filter_array_2_1": {
+          "type": "Query",
+          "inputs": {
+            "from": "@outputs('List_rows_1')?['body/value']",
+            "where": "@equals(item()?['spear_entity'],'CHQ2')"
+          },
+          "runAfter": {
+            "List_rows_1": [
+              "Succeeded"
+            ]
+          }
+        },
+        "Filter_array_2_1_1": {
+          "type": "Query",
+          "inputs": {
+            "from": "@outputs('List_rows_1')?['body/value']",
+            "where": "@equals(item()?['spear_entity'],'PTF2')"
+          },
+          "runAfter": {
+            "List_rows_1": [
+              "Succeeded"
+            ]
+          }
+        },
+        "Filter_array_2_1_2": {
+          "type": "Query",
+          "inputs": {
+            "from": "@outputs('List_rows_1')?['body/value']",
+            "where": "@equals(item()?['spear_entity'],'ANT2')"
+          },
+          "runAfter": {
+            "List_rows_1": [
+              "Succeeded"
+            ]
+          }
+        },
+        "Filter_array_2_1_3": {
+          "type": "Query",
+          "inputs": {
+            "from": "@outputs('List_rows_1')?['body/value']",
+            "where": "@equals(item()?['spear_entity'],'STN2')"
+          },
+          "runAfter": {
+            "List_rows_1": [
+              "Succeeded"
+            ]
+          }
+        },
+        "Filter_array_2_1_4": {
+          "type": "Query",
+          "inputs": {
+            "from": "@outputs('List_rows_1')?['body/value']",
+            "where": "@equals(item()?['spear_entity'],'PL12')"
+          },
+          "runAfter": {
+            "List_rows_1": [
+              "Succeeded"
+            ]
+          }
+        },
+        "Filter_array_2_1_5": {
+          "type": "Query",
+          "inputs": {
+            "from": "@outputs('List_rows_1')?['body/value']",
+            "where": "@equals(item()?['spear_entity'],'PL22')"
+          },
+          "runAfter": {
+            "List_rows_1": [
+              "Succeeded"
+            ]
+          }
+        },
+        "Filter_array_2_1_6": {
+          "type": "Query",
+          "inputs": {
+            "from": "@outputs('List_rows_1')?['body/value']",
+            "where": "@equals(item()?['spear_entity'],'PL32')"
+          },
+          "runAfter": {
+            "List_rows_1": [
+              "Succeeded"
+            ]
+          }
+        },
+        "Filter_array_2_1_7": {
+          "type": "Query",
+          "inputs": {
+            "from": "@outputs('List_rows_1')?['body/value']",
+            "where": "@equals(item()?['spear_entity'],'SNP2')"
+          },
+          "runAfter": {
+            "List_rows_1": [
+              "Succeeded"
+            ]
+          }
+        },
+        "For_each_9": {
+          "type": "Foreach",
+          "foreach": "@body('Filter_array_2')",
+          "actions": {
+            "Append_to_string_variable_2": {
+              "type": "AppendToStringVariable",
+              "inputs": {
+                "name": "FCS2",
+                "value": "@{items('For_each_9')?['spear_appointment']} : @{item()?['_spear_name_value@OData.Community.Display.V1.FormattedValue']} <br>"
+              }
+            }
+          },
+          "runAfter": {
+            "Filter_array_2": [
+              "Succeeded"
+            ]
+          },
+          "runtimeConfiguration": {
+            "concurrency": {
+              "repetitions": 50
+            }
+          }
+        },
+        "For_each_10": {
+          "type": "Foreach",
+          "foreach": "@body('Filter_array_2_1')",
+          "actions": {
+            "Append_to_string_variable_2_1": {
+              "type": "AppendToStringVariable",
+              "inputs": {
+                "name": "CHQ2",
+                "value": "@{items('For_each_10')?['spear_appointment']} : @{item()?['_spear_name_value@OData.Community.Display.V1.FormattedValue']} <br>"
+              }
+            }
+          },
+          "runAfter": {
+            "Filter_array_2_1": [
+              "Succeeded"
+            ]
+          },
+          "runtimeConfiguration": {
+            "concurrency": {
+              "repetitions": 50
+            }
+          }
+        },
+        "For_each_11": {
+          "type": "Foreach",
+          "foreach": "@body('Filter_array_2_1_1')",
+          "actions": {
+            "Append_to_string_variable_2_1_1": {
+              "type": "AppendToStringVariable",
+              "inputs": {
+                "name": "PTF2",
+                "value": "@{items('For_each_11')?['spear_appointment']} :  <br>"
+              }
+            }
+          },
+          "runAfter": {
+            "Filter_array_2_1_1": [
+              "Succeeded"
+            ]
+          },
+          "runtimeConfiguration": {
+            "concurrency": {
+              "repetitions": 50
+            }
+          }
+        },
+        "For_each_12": {
+          "type": "Foreach",
+          "foreach": "@body('Filter_array_2_1_2')",
+          "actions": {
+            "Append_to_string_variable_2_1_2": {
+              "type": "AppendToStringVariable",
+              "inputs": {
+                "name": "Ant2",
+                "value": "@{items('For_each_12')?['spear_appointment']} : @{item()?['_spear_name_value@OData.Community.Display.V1.FormattedValue']}  <br>"
+              }
+            }
+          },
+          "runAfter": {
+            "Filter_array_2_1_2": [
+              "Succeeded"
+            ]
+          },
+          "runtimeConfiguration": {
+            "concurrency": {
+              "repetitions": 50
+            }
+          }
+        },
+        "For_each_13": {
+          "type": "Foreach",
+          "foreach": "@body('Filter_array_2_1_3')",
+          "actions": {
+            "Append_to_string_variable_2_1_3": {
+              "type": "AppendToStringVariable",
+              "inputs": {
+                "name": "STN2",
+                "value": "@{items('For_each_13')?['spear_appointment']} : @{item()?['_spear_name_value@OData.Community.Display.V1.FormattedValue']} <br>"
+              }
+            }
+          },
+          "runAfter": {
+            "Filter_array_2_1_3": [
+              "Succeeded"
+            ]
+          },
+          "runtimeConfiguration": {
+            "concurrency": {
+              "repetitions": 50
+            }
+          }
+        },
+        "For_each_14": {
+          "type": "Foreach",
+          "foreach": "@body('Filter_array_2_1_4')",
+          "actions": {
+            "Append_to_string_variable_2_1_4": {
+              "type": "AppendToStringVariable",
+              "inputs": {
+                "name": "PL 12",
+                "value": "@{items('For_each_14')?['spear_appointment']} : @{item()?['_spear_name_value@OData.Community.Display.V1.FormattedValue']} <br>"
+              }
+            }
+          },
+          "runAfter": {
+            "Filter_array_2_1_4": [
+              "Succeeded"
+            ]
+          },
+          "runtimeConfiguration": {
+            "concurrency": {
+              "repetitions": 50
+            }
+          }
+        },
+        "For_each_15": {
+          "type": "Foreach",
+          "foreach": "@body('Filter_array_2_1_5')",
+          "actions": {
+            "Append_to_string_variable_2_1_5": {
+              "type": "AppendToStringVariable",
+              "inputs": {
+                "name": "PL22",
+                "value": "@{items('For_each_15')?['spear_appointment']} : @{item()?['_spear_name_value@OData.Community.Display.V1.FormattedValue']} <br>"
+              }
+            }
+          },
+          "runAfter": {
+            "Filter_array_2_1_5": [
+              "Succeeded"
+            ]
+          },
+          "runtimeConfiguration": {
+            "concurrency": {
+              "repetitions": 50
+            }
+          }
+        },
+        "For_each_16": {
+          "type": "Foreach",
+          "foreach": "@body('Filter_array_2_1_6')",
+          "actions": {
+            "Append_to_string_variable_2_1_6": {
+              "type": "AppendToStringVariable",
+              "inputs": {
+                "name": "PL32",
+                "value": "@{items('For_each_16')?['spear_appointment']} : @{item()?['_spear_name_value@OData.Community.Display.V1.FormattedValue']} <br>"
+              }
+            }
+          },
+          "runAfter": {
+            "Filter_array_2_1_6": [
+              "Succeeded"
+            ]
+          },
+          "runtimeConfiguration": {
+            "concurrency": {
+              "repetitions": 50
+            }
+          }
+        },
+        "For_each_17": {
+          "type": "Foreach",
+          "foreach": "@body('Filter_array_2_1_7')",
+          "actions": {
+            "Append_to_string_variable_2_1_7": {
+              "type": "AppendToStringVariable",
+              "inputs": {
+                "name": "SNP2",
+                "value": "@{items('For_each_17')?['spear_appointment']} : @{item()?['_spear_name_value@OData.Community.Display.V1.FormattedValue']} <br>"
+              }
+            }
+          },
+          "runAfter": {
+            "Filter_array_2_1_7": [
+              "Succeeded"
+            ]
+          },
+          "runtimeConfiguration": {
+            "concurrency": {
+              "repetitions": 50
+            }
+          }
+        },
+        "Post_message_in_a_chat_or_channel_1": {
+          "type": "OpenApiConnection",
+          "inputs": {
+            "parameters": {
+              "poster": "User",
+              "location": "Channel",
+              "body/recipient/groupId": "98861591-14a4-425a-97b4-092ec3044122",
+              "body/recipient/channelId": "19:2f61ecca44104d8db0d81838ed5483f2@thread.tacv2",
+              "body/messageBody": "<p class=\"editor-paragraph\"><b><strong class=\"editor-text-bold\">MODIFIED BY : </strong></b>@{triggerBody()?['text']}<br>@{outputs('Get_an_@mention_token_for_a_team_tag')?['body/atMention']}</p><br><p class=\"editor-paragraph\"><b><strong class=\"editor-text-bold\">FCS</strong></b></p><p class=\"editor-paragraph\">@{variables('FCS2')}</p><br><p class=\"editor-paragraph\"><b><strong class=\"editor-text-bold\">COY HQ</strong></b></p><p class=\"editor-paragraph\">@{variables('CHQ2')}<br><br><b><strong class=\"editor-text-bold\">ANTI-TANK</strong></b><br>@{variables('Ant2')}</p><br><p class=\"editor-paragraph\"><b><strong class=\"editor-text-bold\">SNIPER</strong></b></p><p class=\"editor-paragraph\">@{variables('SNP2')}</p><br><p class=\"editor-paragraph\"><b><strong class=\"editor-text-bold\">PRV</strong></b></p><p class=\"editor-paragraph\">@{variables('PTF2')}</p><br><p class=\"editor-paragraph\"><b><strong class=\"editor-text-bold\">STEEL-NET</strong></b><br>@{variables('STN2')}</p><br><p class=\"editor-paragraph\"><b><strong class=\"editor-text-bold\">PLATOON 1</strong></b></p><p class=\"editor-paragraph\">@{variables('PL 12')}</p><br><p class=\"editor-paragraph\"><b><strong class=\"editor-text-bold\">PLATOON 2</strong></b><br>@{variables('PL22')}</p><br><p class=\"editor-paragraph\"><b><strong class=\"editor-text-bold\">PLATOON 3</strong></b></p><p class=\"editor-paragraph\">@{variables('PL32')}</p>",
+              "body/subject": "COY 2 NOMIANL ROLL NEW APPOINTMENT HOLDER"
+            },
+            "host": {
+              "apiId": "/providers/Microsoft.PowerApps/apis/shared_teams",
+              "operationId": "PostMessageToConversation",
+              "connectionName": "shared_teams"
+            }
+          },
+          "runAfter": {
+            "For_each_9": [
+              "Succeeded"
+            ],
+            "For_each_10": [
+              "Succeeded"
+            ],
+            "For_each_11": [
+              "Succeeded"
+            ],
+            "For_each_12": [
+              "Succeeded"
+            ],
+            "For_each_13": [
+              "Succeeded"
+            ],
+            "For_each_14": [
+              "Succeeded"
+            ],
+            "For_each_15": [
+              "Succeeded"
+            ],
+            "For_each_16": [
+              "Succeeded"
+            ],
+            "For_each_17": [
+              "Succeeded"
+            ]
+          },
+          "metadata": {
+            "operationMetadataId": "8d5adfdb-a78e-49bb-bd60-0464f6d2d5e0"
+          }
+        },
+        "Post_message_in_a_chat_or_channel_1_1": {
+          "type": "OpenApiConnection",
+          "inputs": {
+            "parameters": {
+              "poster": "User",
+              "location": "Channel",
+              "body/recipient/groupId": "98861591-14a4-425a-97b4-092ec3044122",
+              "body/recipient/channelId": "19:HJ_bevckQuvLl5bdKDr72rs0g6Pz6CMYENBcrMOZe641@thread.tacv2",
+              "body/messageBody": "<p class=\"editor-paragraph\"><b><strong class=\"editor-text-bold\">MODIFIED BY : </strong></b>@{triggerBody()?['text']}<br>@{outputs('Get_an_@mention_token_for_a_team_tag')?['body/atMention']}</p><br><p class=\"editor-paragraph\"><b><strong class=\"editor-text-bold\">FCS</strong></b></p><p class=\"editor-paragraph\">@{variables('FCS')}</p><br><p class=\"editor-paragraph\"><b><strong class=\"editor-text-bold\">COY HQ</strong></b></p><p class=\"editor-paragraph\">@{variables('CHQ')}<br><br><b><strong class=\"editor-text-bold\">ANTI-TANK</strong></b><br>@{variables('Ant')}</p><br><p class=\"editor-paragraph\"><b><strong class=\"editor-text-bold\">SNIPER</strong></b></p><p class=\"editor-paragraph\">@{variables('SNP')}</p><br><p class=\"editor-paragraph\"><b><strong class=\"editor-text-bold\">PRV</strong></b></p><p class=\"editor-paragraph\">@{variables('PTF')}</p><br><p class=\"editor-paragraph\"><b><strong class=\"editor-text-bold\">STEEL-NET</strong></b><br>@{variables('STN')}</p><br><p class=\"editor-paragraph\"><b><strong class=\"editor-text-bold\">PLATOON 1</strong></b></p><p class=\"editor-paragraph\">@{variables('PL 1')}</p><br><p class=\"editor-paragraph\"><b><strong class=\"editor-text-bold\">PLATOON 2</strong></b><br>@{variables('PL2')}</p><br><p class=\"editor-paragraph\"><b><strong class=\"editor-text-bold\">PLATOON 3</strong></b></p><p class=\"editor-paragraph\">@{variables('PL3')}</p>",
+              "body/subject": "COY 1 NOMIANL ROLL NEW APPOINTMENT HOLDER"
+            },
+            "host": {
+              "apiId": "/providers/Microsoft.PowerApps/apis/shared_teams",
+              "operationId": "PostMessageToConversation",
+              "connectionName": "shared_teams"
+            }
+          },
+          "runAfter": {
+            "For_each_1": [
+              "Succeeded"
+            ],
+            "For_each_2": [
+              "Succeeded"
+            ],
+            "For_each_3": [
+              "Succeeded"
+            ],
+            "For_each_4": [
+              "Succeeded"
+            ],
+            "For_each_5": [
+              "Succeeded"
+            ],
+            "For_each_6": [
+              "Succeeded"
+            ],
+            "For_each_7": [
+              "Succeeded"
+            ],
+            "For_each_8": [
+              "Succeeded"
+            ],
+            "For_each": [
+              "Succeeded"
+            ]
+          },
+          "metadata": {
+            "operationMetadataId": "8d5adfdb-a78e-49bb-bd60-0464f6d2d5e0"
+          }
+        },
+        "Post_message_in_a_chat_or_channel": {
+          "type": "OpenApiConnection",
+          "inputs": {
+            "parameters": {
+              "poster": "Flow bot",
+              "location": "Chat with Flow bot",
+              "body/recipient": "Lam_Chee_Heng@defence.gov.sg",
+              "body/messageBody": "<p class=\"editor-paragraph\">Flow 3 : NR summary has failed</p>"
+            },
+            "host": {
+              "apiId": "/providers/Microsoft.PowerApps/apis/shared_teams",
+              "operationId": "PostMessageToConversation",
+              "connectionName": "shared_teams"
+            }
+          },
+          "runAfter": {
+            "Post_message_in_a_chat_or_channel_1_1": [
+              "Failed"
+            ],
+            "Post_message_in_a_chat_or_channel_1": [
+              "Failed"
+            ]
+          }
+        },
+        "Get_an_@mention_token_for_a_team_tag": {
+          "type": "OpenApiConnection",
+          "inputs": {
+            "parameters": {
+              "groupId": "98861591-14a4-425a-97b4-092ec3044122",
+              "tagId": "MTc1NThjZWQtOTA2OC00MzljLWJkZjEtZmU5ZjllMDdmNDVlIyM5ODg2MTU5MS0xNGE0LTQyNWEtOTdiNC0wOTJlYzMwNDQxMjIjI3RLNFVmMXp3dg=="
+            },
+            "host": {
+              "apiId": "/providers/Microsoft.PowerApps/apis/shared_teams",
+              "operationId": "AtMentionTag",
+              "connectionName": "shared_teams"
+            }
+          },
+          "runAfter": {}
+        }
+      }
+    },
+    "templateName": null
+  },
+  "schemaVersion": "1.0.0.0"
+}

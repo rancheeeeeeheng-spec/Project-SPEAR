@@ -1,0 +1,182 @@
+{
+  "properties": {
+    "connectionReferences": {
+      "shared_excelonlinebusiness-1": {
+        "runtimeSource": "embedded",
+        "connection": {
+          "connectionReferenceLogicalName": "new_sharedexcelonlinebusiness_43cd3"
+        },
+        "api": {
+          "name": "shared_excelonlinebusiness"
+        }
+      },
+      "shared_commondataserviceforapps": {
+        "runtimeSource": "embedded",
+        "connection": {
+          "connectionReferenceLogicalName": "spear_sharedcommondataserviceforapps_9d232"
+        },
+        "api": {
+          "name": "shared_commondataserviceforapps"
+        }
+      }
+    },
+    "definition": {
+      "$schema": "https://schema.management.azure.com/providers/Microsoft.Logic/schemas/2016-06-01/workflowdefinition.json#",
+      "contentVersion": "1.0.0.0",
+      "parameters": {
+        "$connections": {
+          "defaultValue": {},
+          "type": "Object"
+        },
+        "$authentication": {
+          "defaultValue": {},
+          "type": "SecureObject"
+        }
+      },
+      "triggers": {
+        "When_a_row_is_added,_modified_or_deleted": {
+          "metadata": {
+            "operationMetadataId": "fc4121ed-b334-447b-a72e-4837ca616ada"
+          },
+          "type": "OpenApiConnectionWebhook",
+          "inputs": {
+            "host": {
+              "connectionName": "shared_commondataserviceforapps",
+              "operationId": "SubscribeWebhookTrigger",
+              "apiId": "/providers/Microsoft.PowerApps/apis/shared_commondataserviceforapps"
+            },
+            "parameters": {
+              "subscriptionRequest/message": 3,
+              "subscriptionRequest/entityname": "spear_nominalroll",
+              "subscriptionRequest/scope": 4,
+              "subscriptionRequest/filteringattributes": "spear_name"
+            },
+            "authentication": "@parameters('$authentication')"
+          }
+        }
+      },
+      "actions": {
+        "Update_a_row": {
+          "runAfter": {
+            "Get_a_row_by_ID": [
+              "Succeeded"
+            ]
+          },
+          "metadata": {
+            "01V22LKKEQVULYHTAGARC2JPSCMSINDQEW": "/TU 1/INPRO excel archive/Nominal roll backup.xlsx",
+            "tableId": "{3FA04637-64D1-4315-A2AC-EE896274F17C}",
+            "operationMetadataId": "c144cc2e-57bf-4485-8f8c-435f1c50ef11"
+          },
+          "type": "OpenApiConnection",
+          "inputs": {
+            "host": {
+              "connectionName": "shared_excelonlinebusiness-1",
+              "operationId": "PatchItem",
+              "apiId": "/providers/Microsoft.PowerApps/apis/shared_excelonlinebusiness"
+            },
+            "parameters": {
+              "source": "groups/98861591-14a4-425a-97b4-092ec3044122",
+              "drive": "b!qkUsy_0tXki1gV5VXY9xt9jL4OiToVpFmqq6BeSnqyPaoEwvbaJFQqLEt-wEZQd8",
+              "file": "01V22LKKEQVULYHTAGARC2JPSCMSINDQEW",
+              "table": "{3FA04637-64D1-4315-A2AC-EE896274F17C}",
+              "idColumn": "APPT",
+              "id": "@triggerOutputs()?['body/spear_appointment']",
+              "item/NAME": "@outputs('Get_a_row_by_ID')?['body/_spear_name_value@OData.Community.Display.V1.FormattedValue']"
+            },
+            "authentication": "@parameters('$authentication')"
+          }
+        },
+        "Get_a_row_by_ID": {
+          "runAfter": {},
+          "metadata": {
+            "operationMetadataId": "ac2a161a-c454-44ec-9b08-d4d2d7f84d82"
+          },
+          "type": "OpenApiConnection",
+          "inputs": {
+            "host": {
+              "connectionName": "shared_commondataserviceforapps",
+              "operationId": "GetItem",
+              "apiId": "/providers/Microsoft.PowerApps/apis/shared_commondataserviceforapps"
+            },
+            "parameters": {
+              "entityName": "spear_nominalrolls",
+              "recordId": "@triggerOutputs()?['body/spear_nominalrollid']"
+            },
+            "authentication": "@parameters('$authentication')"
+          }
+        },
+        "List_rows": {
+          "runAfter": {
+            "Update_a_row": [
+              "Succeeded"
+            ]
+          },
+          "metadata": {
+            "operationMetadataId": "9ae5fb24-c34d-448f-8e77-c22e370f38a3"
+          },
+          "type": "OpenApiConnection",
+          "inputs": {
+            "host": {
+              "connectionName": "shared_commondataserviceforapps",
+              "operationId": "ListRecords",
+              "apiId": "/providers/Microsoft.PowerApps/apis/shared_commondataserviceforapps"
+            },
+            "parameters": {
+              "entityName": "spear_nominalrolls",
+              "$filter": "_spear_name_value eq null"
+            },
+            "authentication": "@parameters('$authentication')"
+          }
+        },
+        "For_each": {
+          "foreach": "@outputs('List_rows')?['body/value']",
+          "actions": {
+            "Update_a_row_1": {
+              "runAfter": {},
+              "metadata": {
+                "01V22LKKEQVULYHTAGARC2JPSCMSINDQEW": "/TU 1/INPRO excel archive/Nominal roll backup.xlsx",
+                "tableId": "{3FA04637-64D1-4315-A2AC-EE896274F17C}",
+                "operationMetadataId": "342c401a-5648-4517-8088-e61654a05796"
+              },
+              "type": "OpenApiConnection",
+              "inputs": {
+                "host": {
+                  "connectionName": "shared_excelonlinebusiness-1",
+                  "operationId": "PatchItem",
+                  "apiId": "/providers/Microsoft.PowerApps/apis/shared_excelonlinebusiness"
+                },
+                "parameters": {
+                  "source": "groups/98861591-14a4-425a-97b4-092ec3044122",
+                  "drive": "b!qkUsy_0tXki1gV5VXY9xt9jL4OiToVpFmqq6BeSnqyPaoEwvbaJFQqLEt-wEZQd8",
+                  "file": "01V22LKKEQVULYHTAGARC2JPSCMSINDQEW",
+                  "table": "{3FA04637-64D1-4315-A2AC-EE896274F17C}",
+                  "idColumn": "APPT",
+                  "id": "@items('For_each')?['spear_appointment']",
+                  "item/NAME": "1965"
+                },
+                "authentication": "@parameters('$authentication')"
+              }
+            }
+          },
+          "runAfter": {
+            "List_rows": [
+              "Succeeded"
+            ]
+          },
+          "metadata": {
+            "operationMetadataId": "055ee08a-c028-49ee-99a1-26a0b755fa55"
+          },
+          "type": "Foreach",
+          "runtimeConfiguration": {
+            "concurrency": {
+              "repetitions": 40
+            }
+          }
+        }
+      },
+      "outputs": {}
+    },
+    "templateName": ""
+  },
+  "schemaVersion": "1.0.0.0"
+}
